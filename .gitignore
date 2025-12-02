@@ -37,14 +37,3 @@ build/
 # misc
 .DS_Store
 *.pem
-
-# temporary files
-**/errorscours/*
-**/controllerscours/*
-**/authcours/*
-**/constantscours/*
-**/converterscours/*
-**/dtoscours/*
-**/entitiescours/*
-**/repositoriescours/*
-**/servicescours/*

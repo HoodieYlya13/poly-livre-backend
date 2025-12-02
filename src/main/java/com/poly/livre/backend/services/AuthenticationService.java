@@ -3,39 +3,117 @@ package com.poly.livre.backend.services;
 import com.poly.livre.backend.exceptions.ForbiddenException;
 import com.poly.livre.backend.exceptions.errors.AuthenticationErrorCode;
 import com.poly.livre.backend.managers.JwtManager;
-import com.poly.livre.backend.models.dtos.AuthenticationRequest;
+import com.poly.livre.backend.models.dtos.AuthenticationFinishRequest;
 import com.poly.livre.backend.models.dtos.AuthenticationResponse;
+import com.poly.livre.backend.models.dtos.RegistrationFinishRequest;
 import com.poly.livre.backend.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import com.webauthn4j.data.PublicKeyCredentialCreationOptions;
+import com.webauthn4j.data.PublicKeyCredentialRequestOptions;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.UUID;
+import com.poly.livre.backend.models.entities.User;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class AuthenticationService  {
+public class AuthenticationService {
 
     private final UserRepository userRepository;
-    private final PasswordEncoder encoder;
     private final JwtManager jwtManager;
+    private final EmailService emailService;
+    private final WebAuthnService webAuthnService;
+    private final Clock clock;
 
     @Transactional
-    public AuthenticationResponse authenticateUser(AuthenticationRequest dto) {
-        log.info("Authenticating user : {}", dto.getEmail());
+    public void requestMagicLink(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseGet(() -> registerNewUser(email));
 
-        return userRepository.findByEmail(dto.getEmail())
-                .filter(user -> encoder.matches(dto.getPassword(), user.getPassword()))
-                .map(user -> AuthenticationResponse.builder()
-                        .userId(user.getId())
-                        .email(user.getEmail())
-                        .token(jwtManager.generateToken(user))
-                        .expiresIn(jwtManager.getExpirationTime())
-                        .build())
+        String token = UUID.randomUUID().toString();
+        String hashedToken = hashToken(token);
+
+        user.setMagicLinkToken(hashedToken);
+        user.setMagicLinkTokenExpiration(Instant.now(clock).plus(15, ChronoUnit.MINUTES));
+        userRepository.save(user);
+
+        emailService.sendMagicLink(email, "http://localhost:3000/auth/magic-link?token=" + token);
+    }
+
+    @Transactional
+    public AuthenticationResponse verifyMagicLink(String token) {
+        String hashedToken = hashToken(token);
+
+        return userRepository.findByMagicLinkToken(hashedToken)
+                .filter(u -> u.getMagicLinkTokenExpiration().isAfter(Instant.now(clock)))
+                .map(user -> {
+                    user.setMagicLinkToken(null);
+                    user.setMagicLinkTokenExpiration(null);
+                    userRepository.save(user);
+                    return generateAuthResponse(user);
+                })
                 .orElseThrow(() -> new ForbiddenException(AuthenticationErrorCode.FAILED));
     }
 
-}
+    @Transactional
+    public PublicKeyCredentialCreationOptions startPasskeyRegistration(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ForbiddenException(AuthenticationErrorCode.FAILED));
 
-// TODO : Modify for magic link and passkey
+        return webAuthnService.startRegistration(user);
+    }
+
+    @Transactional
+    public PublicKeyCredentialRequestOptions startPasskeyLogin(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ForbiddenException(AuthenticationErrorCode.FAILED));
+
+        return webAuthnService.startAuthentication(user);
+    }
+
+    @Transactional
+    public void finishPasskeyRegistration(String email, RegistrationFinishRequest request) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ForbiddenException(AuthenticationErrorCode.FAILED));
+
+        webAuthnService.finishRegistration(user, request);
+    }
+
+    @Transactional
+    public AuthenticationResponse finishPasskeyLogin(String email, AuthenticationFinishRequest request) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ForbiddenException(AuthenticationErrorCode.FAILED));
+
+        webAuthnService.finishLogin(user, request);
+
+        return generateAuthResponse(user);
+    }
+
+    private User registerNewUser(String email) {
+        String username = email.split("@")[0];
+        User user = User.builder()
+                .email(email)
+                .username(username)
+                .build();
+        return userRepository.save(user);
+    }
+
+    private AuthenticationResponse generateAuthResponse(User user) {
+        String accessToken = jwtManager.generateToken(user);
+        return AuthenticationResponse.builder()
+                .token(accessToken)
+                .build();
+    }
+
+    private String hashToken(String token) {
+        return DigestUtils.sha256Hex(token);
+    }
+
+}

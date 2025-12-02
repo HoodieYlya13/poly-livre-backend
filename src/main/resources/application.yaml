@@ -9,6 +9,17 @@ spring:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
       ddl-auto: update # create, create-drop, update, validate, none
+  mail:
+    host: localhost
+    port: 1025
+    username: null
+    password: null
+    properties:
+      mail:
+        smtp:
+          auth: false
+          starttls:
+            enable: false
 
 jwt:
   privateKey: ${JWT_PRIVATE_KEY}
@@ -19,3 +30,8 @@ jwt:
 
 logging.level:
   com.poly.livre.backend: DEBUG
+
+webauthn:
+  rp-id: localhost
+  rp-name: PolyLivre
+  origin: http://localhost:3000

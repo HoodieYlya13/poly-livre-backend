@@ -9,14 +9,3 @@ Dockerfile
 *.iws
 *.iml
 *.ipr
-
-# temporary files
-**/errorscours/*
-**/controllerscours/*
-**/authcours/*
-**/constantscours/*
-**/converterscours/*
-**/dtoscours/*
-**/entitiescours/*
-**/repositoriescours/*
-**/servicescours/*

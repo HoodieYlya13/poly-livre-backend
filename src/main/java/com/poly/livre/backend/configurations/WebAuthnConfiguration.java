@@ -1,18 +1,15 @@
 package com.poly.livre.backend.configurations;
 
-import lombok.RequiredArgsConstructor;
+import com.webauthn4j.WebAuthnManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import java.time.Clock;
-
 @Configuration
-@RequiredArgsConstructor
-public class GenericConfiguration {
+public class WebAuthnConfiguration {
 
     @Bean
-    public Clock clock() {
-        return Clock.systemDefaultZone();
+    public WebAuthnManager webAuthnManager() {
+        return WebAuthnManager.createNonStrictWebAuthnManager();
     }
 
 }

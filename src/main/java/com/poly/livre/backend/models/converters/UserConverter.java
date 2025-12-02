@@ -6,7 +6,6 @@ import org.springframework.core.convert.converter.Converter;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 
-
 @Component
 public class UserConverter implements Converter<User, UserDto> {
 
@@ -21,5 +20,3 @@ public class UserConverter implements Converter<User, UserDto> {
     }
 
 }
-
-// TODO : Modify for magic link and passkey

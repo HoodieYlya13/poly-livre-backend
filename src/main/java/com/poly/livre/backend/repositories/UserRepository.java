@@ -12,6 +12,6 @@ public interface UserRepository extends JpaRepository<User, UUID> {
 
     Optional<User> findByEmail(String email);
 
-}
+    Optional<User> findByMagicLinkToken(String magicLinkToken);
 
-// TODO : Modify for magic link and passkey
+}

@@ -3,6 +3,7 @@ package com.poly.livre.backend.models.entities;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.Instant;
 import java.util.UUID;
 
 @Entity(name = "USERS")
@@ -24,9 +25,10 @@ public class User extends AuditDateEntity {
     @Column(name = "EMAIL", columnDefinition = "VARCHAR(255)", nullable = false, unique = true)
     private String email;
 
-    @Column(name = "PASSWORD", columnDefinition = "VARCHAR(255)", nullable = false)
-    private String password;
+    @Column(name = "MAGIC_LINK_TOKEN", columnDefinition = "VARCHAR(255)")
+    private String magicLinkToken;
+
+    @Column(name = "MAGIC_LINK_TOKEN_EXPIRATION", columnDefinition = "TIMESTAMP WITH TIME ZONE")
+    private Instant magicLinkTokenExpiration;
 
 }
-
-// TODO : Modify for magic link and passkey

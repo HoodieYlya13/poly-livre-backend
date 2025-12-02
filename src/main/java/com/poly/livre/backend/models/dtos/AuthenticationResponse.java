@@ -17,6 +17,5 @@ public class AuthenticationResponse {
     private String email;
     private String token;
     private Integer expiresIn;
-}
 
-// TODO : Modify for magic link and passkey
+}

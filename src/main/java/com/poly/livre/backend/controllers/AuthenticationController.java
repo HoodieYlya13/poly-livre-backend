@@ -1,39 +1,52 @@
 package com.poly.livre.backend.controllers;
 
-import com.poly.livre.backend.models.dtos.AuthenticationRequest;
+import com.poly.livre.backend.models.dtos.AuthenticationFinishRequest;
 import com.poly.livre.backend.models.dtos.AuthenticationResponse;
+import com.poly.livre.backend.models.dtos.RegistrationFinishRequest;
 import com.poly.livre.backend.services.AuthenticationService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import com.webauthn4j.data.PublicKeyCredentialCreationOptions;
+import com.webauthn4j.data.PublicKeyCredentialRequestOptions;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping(path = "/auth")
+@RequestMapping("/auth")
 @RequiredArgsConstructor
 public class AuthenticationController {
 
     private final AuthenticationService authenticationService;
 
-    @Operation(summary = "Authenticate a user")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "User authenticated",
-                    content = { @Content(mediaType = "application/json", schema = @Schema(implementation = AuthenticationResponse.class)) }),
-            @ApiResponse(responseCode = "401", description = "User not authenticated")
-    })
-    @PostMapping(path = "/login")
-    public ResponseEntity<AuthenticationResponse> login(@RequestBody @Valid AuthenticationRequest dto) {
-        return ResponseEntity.ok(authenticationService.authenticateUser(dto));
+    @PostMapping("/magic-link/request")
+    public void requestMagicLink(@RequestParam String email) {
+        authenticationService.requestMagicLink(email);
     }
 
-}
+    @PostMapping("/magic-link/verify")
+    public AuthenticationResponse verifyMagicLink(@RequestParam String token) {
+        return authenticationService.verifyMagicLink(token);
+    }
 
-// TODO : Modify for magic link and passkey
+    @PostMapping("/passkey/register/start")
+    public PublicKeyCredentialCreationOptions startPasskeyRegistration(@RequestParam String email) {
+        return authenticationService.startPasskeyRegistration(email);
+    }
+
+    @PostMapping("/passkey/register/finish")
+    public void finishPasskeyRegistration(@RequestParam String email, @RequestBody RegistrationFinishRequest request) {
+        authenticationService.finishPasskeyRegistration(email, request);
+    }
+
+    @PostMapping("/passkey/login/start")
+    public PublicKeyCredentialRequestOptions startPasskeyLogin(@RequestParam String email) {
+        return authenticationService.startPasskeyLogin(email);
+    }
+
+    @PostMapping("/passkey/login/finish")
+    public AuthenticationResponse finishPasskeyLogin(@RequestParam String email,
+            @RequestBody AuthenticationFinishRequest request) {
+        return authenticationService.finishPasskeyLogin(email, request);
+    }
+}

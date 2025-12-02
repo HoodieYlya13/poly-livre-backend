@@ -20,5 +20,3 @@ public class UserDto {
     private String email;
 
 }
-
-// TODO : Modify for magic link and passkey

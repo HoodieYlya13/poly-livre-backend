@@ -12,10 +12,9 @@ public interface BaseService {
     default Optional<CustomPrincipal> getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        if (Objects.nonNull(authentication) && authentication.getPrincipal() instanceof CustomPrincipal user) return Optional.of(user);
+        if (Objects.nonNull(authentication) && authentication.getPrincipal() instanceof CustomPrincipal user)
+            return Optional.of(user);
         return Optional.empty();
     }
 
 }
-
-// TODO : Modify for magic link and passkey

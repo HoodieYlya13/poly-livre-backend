@@ -11,7 +11,7 @@ import java.util.UUID;
 @NoArgsConstructor
 public class CustomPrincipal {
 
-    public CustomPrincipal (User user) {
+    public CustomPrincipal(User user) {
         this.id = user.getId();
         this.username = user.getUsername();
         this.email = user.getEmail();
@@ -22,5 +22,3 @@ public class CustomPrincipal {
     private String email;
 
 }
-
-// TODO : Modify for magic link and passkey 

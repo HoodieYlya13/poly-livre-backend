@@ -9,12 +9,9 @@ import lombok.ToString;
 @ToString
 public enum UserErrorCode implements ErrorCode {
 
-    NOT_FOUND("USER_001", "User not found"),
-    EMAIL_ALREADY_EXISTS("USER_002", "User with same email already exists");
+    NOT_FOUND("USER_001", "User not found");
 
     private final String code;
     private final String description;
 
 }
-
-// TODO : Modify for magic link and passkey
