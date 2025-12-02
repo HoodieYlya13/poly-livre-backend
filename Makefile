@@ -1,9 +1,12 @@
-.PHONY: build up down logs clean
+.PHONY: build up down logs clean setup_env
 
-build:
+setup_env:
+	./setup_env.sh
+
+build: setup_env
 	docker-compose build
 
-up:
+up: setup_env
 	docker-compose up -d
 
 down:
