@@ -1,0 +1,32 @@
+package com.poly.livre.backend.models.entities;
+
+import jakarta.persistence.*;
+import lombok.*;
+
+import java.util.UUID;
+
+@Entity(name = "USERS")
+@Getter
+@Setter
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
+public class User extends AuditDateEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
+
+    @Column(name = "USERNAME", columnDefinition = "VARCHAR(255)", nullable = false)
+    private String username;
+
+    @Column(name = "EMAIL", columnDefinition = "VARCHAR(255)", nullable = false, unique = true)
+    private String email;
+
+    @Column(name = "PASSWORD", columnDefinition = "VARCHAR(255)", nullable = false)
+    private String password;
+
+}
+
+// TODO : Modify for magic link and passkey

@@ -1,4 +1,3 @@
-HELP.md
 target/
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
@@ -38,3 +37,14 @@ build/
 # misc
 .DS_Store
 *.pem
+
+# temporary files
+**/errorscours/*
+**/controllerscours/*
+**/authcours/*
+**/constantscours/*
+**/converterscours/*
+**/dtoscours/*
+**/entitiescours/*
+**/repositoriescours/*
+**/servicescours/*

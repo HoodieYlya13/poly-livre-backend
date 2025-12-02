@@ -1,3 +1,21 @@
 spring:
-  application:
-    name: poly-livre-backend
+  application.name: poly-livre-backend
+  datasource:
+    url: jdbc:postgresql://localhost:5432/polylivredb
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
+    driverClassName: org.postgresql.Driver
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update # create, create-drop, update, validate, none
+
+jwt:
+  privateKey: ${JWT_PRIVATE_KEY}
+  publicKey: ${JWT_PUBLIC_KEY}
+  validity: 3600 # 1 hour
+  algorithm: EC
+  issuer: backend-poly-livre
+
+logging.level:
+  com.poly.livre.backend: DEBUG
