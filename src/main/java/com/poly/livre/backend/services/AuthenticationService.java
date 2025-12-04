@@ -116,10 +116,8 @@ public class AuthenticationService {
     }
 
     private User registerNewUser(String email) {
-        String username = email.split("@")[0];
         User user = User.builder()
                 .email(email)
-                .username(username)
                 .build();
         return userRepository.save(user);
     }
@@ -129,6 +127,7 @@ public class AuthenticationService {
         return AuthenticationResponse.builder()
                 .token(accessToken)
                 .userId(user.getId())
+                .username(user.getUsername())
                 .email(user.getEmail())
                 .expiresIn(jwtManager.getExpirationTime())
                 .build();

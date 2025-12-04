@@ -38,6 +38,7 @@ public class WebSecurityConfiguration implements WebMvcConfigurer {
 
                                                 .requestMatchers(HttpMethod.POST, "/auth/magic-link/**").permitAll()
                                                 .requestMatchers(HttpMethod.POST, "/auth/passkey/**").permitAll()
+                                                .requestMatchers(HttpMethod.POST, "/users/**").permitAll()
 
                                                 .anyRequest().authenticated())
                                 .addFilterBefore(new JwtAuthenticationFilter(objectMapper, userRepository, jwtManager),

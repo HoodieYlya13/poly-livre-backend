@@ -19,7 +19,7 @@ public class User extends AuditDateEntity {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name = "USERNAME", columnDefinition = "VARCHAR(255)", nullable = false)
+    @Column(name = "USERNAME", columnDefinition = "VARCHAR(255)")
     private String username;
 
     @Column(name = "EMAIL", columnDefinition = "VARCHAR(255)", nullable = false, unique = true)

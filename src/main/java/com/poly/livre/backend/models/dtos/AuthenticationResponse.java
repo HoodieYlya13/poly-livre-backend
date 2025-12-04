@@ -14,6 +14,7 @@ import java.util.UUID;
 public class AuthenticationResponse {
 
     private UUID userId;
+    private String username;
     private String email;
     private String token;
     private Integer expiresIn;

@@ -2,6 +2,7 @@ package com.poly.livre.backend.services;
 
 import com.poly.livre.backend.exceptions.NotFoundException;
 import com.poly.livre.backend.exceptions.errors.UserErrorCode;
+import com.poly.livre.backend.managers.JwtManager;
 import com.poly.livre.backend.models.converters.UserConverter;
 import com.poly.livre.backend.models.dtos.UserDto;
 import com.poly.livre.backend.repositories.UserRepository;
@@ -11,14 +12,17 @@ import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.poly.livre.backend.exceptions.ForbiddenException;
+import com.poly.livre.backend.models.entities.User;
 import java.util.UUID;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class UserService {
+public class UserService implements BaseService {
     private final UserRepository userRepository;
     private final UserConverter userConverter;
+    private final JwtManager jwtManager;
 
     @Transactional(readOnly = true)
     public UserDto getUserById(@NonNull UUID userId) {
@@ -27,6 +31,29 @@ public class UserService {
         return userRepository.findById(userId)
                 .map(userConverter::convert)
                 .orElseThrow(() -> new NotFoundException(UserErrorCode.NOT_FOUND, userId.toString()));
+    }
+
+    @Transactional(readOnly = true)
+    public UserDto getCurrentUserDto() {
+        return getCurrentUser()
+                .map(principal -> {
+                    UserDto dto = getUserById(principal.getId());
+                    dto.setExpiresIn(jwtManager.getExpirationTime());
+                    return dto;
+                })
+                .orElseThrow(() -> new ForbiddenException(UserErrorCode.NOT_FOUND));
+    }
+
+    @Transactional
+    public UserDto updateUsername(String username) {
+        User user = getCurrentUser()
+                .flatMap(principal -> userRepository.findById(principal.getId()))
+                .orElseThrow(() -> new ForbiddenException(UserErrorCode.NOT_FOUND));
+
+        user.setUsername(username);
+        UserDto dto = userConverter.convert(userRepository.save(user));
+        dto.setExpiresIn(jwtManager.getExpirationTime());
+        return dto;
     }
 
 }
