@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Map;
+
 @Data
 @Builder
 @AllArgsConstructor
@@ -15,7 +17,7 @@ public class RegistrationFinishRequest {
     private String rawId;
     private String type;
     private AuthenticatorResponse response;
-    private String clientExtensionResults;
+    private Map<String, Object> clientExtensionResults;
 
     @Data
     @Builder
@@ -26,5 +28,5 @@ public class RegistrationFinishRequest {
         private String clientDataJSON;
         private String[] transports;
     }
-    
+
 }

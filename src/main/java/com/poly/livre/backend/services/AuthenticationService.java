@@ -96,6 +96,24 @@ public class AuthenticationService {
         return generateAuthResponse(user);
     }
 
+    @Transactional
+    public java.util.Map<String, Object> startDiscoverableLogin() {
+        return webAuthnService.startDiscoverableLogin();
+    }
+
+    public String generateChallengeToken(String challenge) {
+        return jwtManager.generateChallengeToken(challenge);
+    }
+
+    @Transactional
+    public AuthenticationResponse finishDiscoverableLogin(String challengeToken, AuthenticationFinishRequest request) {
+        String challenge = jwtManager.extractChallenge(challengeToken);
+        if (challenge == null) throw new ForbiddenException(AuthenticationErrorCode.FAILED);
+
+        User user = webAuthnService.finishDiscoverableLogin(challenge, request);
+        return generateAuthResponse(user);
+    }
+
     private User registerNewUser(String email) {
         String username = email.split("@")[0];
         User user = User.builder()
@@ -109,6 +127,9 @@ public class AuthenticationService {
         String accessToken = jwtManager.generateToken(user);
         return AuthenticationResponse.builder()
                 .token(accessToken)
+                .userId(user.getId())
+                .email(user.getEmail())
+                .expiresIn(jwtManager.getExpirationTime())
                 .build();
     }
 

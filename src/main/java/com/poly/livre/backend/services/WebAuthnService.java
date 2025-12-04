@@ -32,6 +32,11 @@ import com.webauthn4j.data.AuthenticationData;
 import com.webauthn4j.data.attestation.authenticator.AAGUID;
 import com.webauthn4j.data.attestation.authenticator.AttestedCredentialData;
 import com.webauthn4j.data.attestation.authenticator.COSEKey;
+import com.webauthn4j.data.AuthenticatorSelectionCriteria;
+import com.webauthn4j.data.AuthenticatorAttachment;
+import com.webauthn4j.data.AttestationConveyancePreference;
+import java.util.Collections;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -39,6 +44,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Service
@@ -47,6 +53,7 @@ public class WebAuthnService {
 
         private final WebAuthnCredentialRepository credentialRepository;
         private final WebAuthnManager webAuthnManager;
+        private final com.poly.livre.backend.repositories.UserRepository userRepository;
 
         @Value("${webauthn.rp-id}")
         private String rpId;
@@ -67,21 +74,41 @@ public class WebAuthnService {
 
                 PublicKeyCredentialRpEntity rpEntity = new PublicKeyCredentialRpEntity(rpId, rpName);
 
+                String challengeString = java.util.Base64.getUrlEncoder().withoutPadding()
+                                .encodeToString(challenge.getValue());
+                user.setCurrentChallenge(challengeString);
+                userRepository.save(user);
+
                 List<PublicKeyCredentialParameters> pubKeyCredParams = List.of(
                                 new PublicKeyCredentialParameters(PublicKeyCredentialType.PUBLIC_KEY,
                                                 COSEAlgorithmIdentifier.ES256),
                                 new PublicKeyCredentialParameters(PublicKeyCredentialType.PUBLIC_KEY,
                                                 COSEAlgorithmIdentifier.RS256));
 
+                AuthenticatorSelectionCriteria authenticatorSelection = new AuthenticatorSelectionCriteria(
+                                AuthenticatorAttachment.PLATFORM,
+                                true, // requireResidentKey
+                                UserVerificationRequirement.PREFERRED);
+
                 return new PublicKeyCredentialCreationOptions(
                                 rpEntity,
                                 userEntity,
                                 challenge,
-                                pubKeyCredParams);
+                                pubKeyCredParams,
+                                60000L, // timeout
+                                Collections.emptyList(), // excludeCredentials
+                                authenticatorSelection,
+                                AttestationConveyancePreference.NONE,
+                                null // extensions
+                );
         }
 
         public PublicKeyCredentialRequestOptions startAuthentication(User user) {
                 Challenge challenge = new DefaultChallenge();
+                String challengeString = java.util.Base64.getUrlEncoder().withoutPadding()
+                                .encodeToString(challenge.getValue());
+                user.setCurrentChallenge(challengeString);
+                userRepository.save(user);
 
                 return new PublicKeyCredentialRequestOptions(
                                 challenge,
@@ -92,17 +119,95 @@ public class WebAuthnService {
                                 null);
         }
 
+        public Map<String, Object> startDiscoverableLogin() {
+                Challenge challenge = new DefaultChallenge();
+                String challengeString = java.util.Base64.getUrlEncoder().withoutPadding()
+                                .encodeToString(challenge.getValue());
+
+                PublicKeyCredentialRequestOptions options = new PublicKeyCredentialRequestOptions(
+                                challenge,
+                                60000L,
+                                rpId,
+                                Collections.emptyList(), // Allow any credential (discoverable)
+                                UserVerificationRequirement.PREFERRED,
+                                null);
+
+                return Map.of("options", options, "challenge", challengeString);
+        }
+
+        @Transactional
+        public User finishDiscoverableLogin(String challengeString, AuthenticationFinishRequest request) {
+                AuthenticationRequest authenticationRequest = new AuthenticationRequest(
+                                java.util.Base64.getUrlDecoder().decode(request.getId()),
+                                java.util.Base64.getUrlDecoder().decode(request.getResponse().getAuthenticatorData()),
+                                java.util.Base64.getUrlDecoder().decode(request.getResponse().getClientDataJSON()),
+                                java.util.Base64.getUrlDecoder().decode(request.getResponse().getSignature()));
+
+                Challenge challenge = new DefaultChallenge(java.util.Base64.getUrlDecoder().decode(challengeString));
+
+                AuthenticationData authenticationData = webAuthnManager.parse(authenticationRequest);
+
+                WebAuthnCredential credential = credentialRepository.findByCredentialId(request.getId())
+                                .orElseThrow(() -> new RuntimeException("Credential not found"));
+
+                User user = credential.getUser();
+
+                ObjectConverter objectConverter = new ObjectConverter();
+                byte[] publicKeyBytes = java.util.Base64.getUrlDecoder().decode(credential.getPublicKey());
+                COSEKey coseKey = objectConverter.getCborConverter().readValue(publicKeyBytes, COSEKey.class);
+
+                byte[] credentialId = java.util.Base64.getUrlDecoder().decode(credential.getCredentialId());
+
+                AttestedCredentialData attestedCredentialData = new AttestedCredentialData(
+                                new AAGUID(AAGUID.ZERO.getValue()), credentialId, coseKey);
+
+                CredentialRecord credentialRecord = new CredentialRecordImpl(
+                                null, // AttestationStatement
+                                null, // uvInitialized
+                                null, // backupEligible
+                                null, // backupState
+                                credential.getSignCount(),
+                                attestedCredentialData,
+                                null, // authenticationExtensionsAuthenticatorOutputs
+                                null, // collectedClientData
+                                null, // clientExtensions
+                                null // transports
+                );
+
+                AuthenticationParameters authenticationParameters = new AuthenticationParameters(
+                                new ServerProperty(new Origin(origin), rpId, challenge, null),
+                                credentialRecord,
+                                null, // userVerificationRequirement
+                                false // userPresenceRequired
+                );
+
+                webAuthnManager.verify(authenticationData, authenticationParameters);
+
+                credential.setSignCount(authenticationData.getAuthenticatorData().getSignCount());
+                credentialRepository.save(credential);
+
+                return user;
+        }
+
         @Transactional
         public void finishRegistration(User user, RegistrationFinishRequest request) {
                 RegistrationRequest registrationRequest = new RegistrationRequest(
-                                request.getResponse().getAttestationObject().getBytes(),
-                                request.getResponse().getClientDataJSON().getBytes());
+                                java.util.Base64.getUrlDecoder().decode(request.getResponse().getAttestationObject()),
+                                java.util.Base64.getUrlDecoder().decode(request.getResponse().getClientDataJSON()));
+
+                String savedChallenge = user.getCurrentChallenge();
+                if (savedChallenge == null) throw new RuntimeException("No challenge found for user");
+
+                Challenge challenge = new DefaultChallenge(java.util.Base64.getUrlDecoder().decode(savedChallenge));
 
                 RegistrationParameters registrationParameters = new RegistrationParameters(
-                                new ServerProperty(new Origin(origin), rpId, null, null),
+                                new ServerProperty(new Origin(origin), rpId, challenge, null),
                                 null, // UserVerificationRequirement
                                 false // userPresenceRequired
                 );
+
+                user.setCurrentChallenge(null);
+                userRepository.save(user);
 
                 RegistrationData registrationData = webAuthnManager.parse(registrationRequest);
                 webAuthnManager.verify(registrationData, registrationParameters);
@@ -135,10 +240,10 @@ public class WebAuthnService {
                                 .orElseThrow(() -> new RuntimeException("Credential not found"));
 
                 AuthenticationRequest authenticationRequest = new AuthenticationRequest(
-                                request.getId().getBytes(),
-                                request.getResponse().getAuthenticatorData().getBytes(),
-                                request.getResponse().getClientDataJSON().getBytes(),
-                                request.getResponse().getSignature().getBytes());
+                                java.util.Base64.getUrlDecoder().decode(request.getId()),
+                                java.util.Base64.getUrlDecoder().decode(request.getResponse().getAuthenticatorData()),
+                                java.util.Base64.getUrlDecoder().decode(request.getResponse().getClientDataJSON()),
+                                java.util.Base64.getUrlDecoder().decode(request.getResponse().getSignature()));
 
                 ObjectConverter objectConverter = new ObjectConverter();
                 byte[] publicKeyBytes = java.util.Base64.getUrlDecoder().decode(credential.getPublicKey());
@@ -162,12 +267,19 @@ public class WebAuthnService {
                                 null // transports
                 );
 
+                String savedChallenge = user.getCurrentChallenge();
+                if (savedChallenge == null) throw new RuntimeException("No challenge found for user");
+                Challenge challenge = new DefaultChallenge(java.util.Base64.getUrlDecoder().decode(savedChallenge));
+
                 AuthenticationParameters authenticationParameters = new AuthenticationParameters(
-                                new ServerProperty(new Origin(origin), rpId, null, null),
+                                new ServerProperty(new Origin(origin), rpId, challenge, null),
                                 credentialRecord,
                                 null, // userVerificationRequirement
                                 false // userPresenceRequired
                 );
+
+                user.setCurrentChallenge(null);
+                userRepository.save(user);
 
                 AuthenticationData authenticationData = webAuthnManager.parse(authenticationRequest);
                 webAuthnManager.verify(authenticationData, authenticationParameters);

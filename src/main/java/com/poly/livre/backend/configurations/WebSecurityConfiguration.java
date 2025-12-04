@@ -38,7 +38,7 @@ public class WebSecurityConfiguration implements WebMvcConfigurer {
 
                                                 .requestMatchers(HttpMethod.POST, "/auth/magic-link/**").permitAll()
                                                 .requestMatchers(HttpMethod.POST, "/auth/passkey/**").permitAll()
-                                                
+
                                                 .anyRequest().authenticated())
                                 .addFilterBefore(new JwtAuthenticationFilter(objectMapper, userRepository, jwtManager),
                                                 AnonymousAuthenticationFilter.class);
@@ -50,8 +50,9 @@ public class WebSecurityConfiguration implements WebMvcConfigurer {
         public void addCorsMappings(@NonNull CorsRegistry registry) {
                 registry.addMapping("/**")
                                 .exposedHeaders(HttpHeaders.CONTENT_DISPOSITION)
-                                .allowedOrigins("*")
-                                .allowedMethods("*");
+                                .allowedOrigins("http://localhost:3000")
+                                .allowedMethods("*")
+                                .allowCredentials(true);
         }
 
 }

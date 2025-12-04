@@ -40,13 +40,45 @@ public class AuthenticationController {
     }
 
     @PostMapping("/passkey/login/start")
-    public PublicKeyCredentialRequestOptions startPasskeyLogin(@RequestParam String email) {
-        return authenticationService.startPasskeyLogin(email);
+    public PublicKeyCredentialRequestOptions startPasskeyLogin(@RequestParam(required = false) String email,
+            jakarta.servlet.http.HttpServletResponse response) {
+        if (email != null) return authenticationService.startPasskeyLogin(email);
+        else {
+            java.util.Map<String, Object> result = authenticationService.startDiscoverableLogin();
+            String challenge = (String) result.get("challenge");
+            String token = authenticationService.generateChallengeToken(challenge);
+
+            jakarta.servlet.http.Cookie cookie = new jakarta.servlet.http.Cookie("challenge_token", token);
+            cookie.setHttpOnly(true);
+            cookie.setSecure(false); // Should be true in production
+            cookie.setPath("/");
+            cookie.setMaxAge(300); // 5 minutes
+            response.addCookie(cookie);
+
+            return (PublicKeyCredentialRequestOptions) result.get("options");
+        }
     }
 
     @PostMapping("/passkey/login/finish")
-    public AuthenticationResponse finishPasskeyLogin(@RequestParam String email,
-            @RequestBody AuthenticationFinishRequest request) {
-        return authenticationService.finishPasskeyLogin(email, request);
+    public AuthenticationResponse finishPasskeyLogin(
+            @RequestParam(required = false) String email,
+            @RequestBody AuthenticationFinishRequest request,
+            @CookieValue(value = "challenge_token", required = false) String challengeToken,
+            jakarta.servlet.http.HttpServletResponse response) {
+
+        if (email != null) return authenticationService.finishPasskeyLogin(email, request);
+        else {
+            if (challengeToken == null) throw new RuntimeException("Challenge token missing");
+
+            jakarta.servlet.http.Cookie cookie = new jakarta.servlet.http.Cookie("challenge_token", null);
+            cookie.setHttpOnly(true);
+            cookie.setSecure(false);
+            cookie.setPath("/");
+            cookie.setMaxAge(0);
+            response.addCookie(cookie);
+
+            return authenticationService.finishDiscoverableLogin(challengeToken, request);
+        }
     }
+    
 }

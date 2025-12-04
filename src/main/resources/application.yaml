@@ -20,6 +20,8 @@ spring:
           auth: false
           starttls:
             enable: false
+  jackson:
+    default-property-inclusion: non_null
 
 jwt:
   privateKey: ${JWT_PRIVATE_KEY}
@@ -33,5 +35,5 @@ logging.level:
 
 webauthn:
   rp-id: localhost
-  rp-name: PolyLivre
+  rp-name: Liprerie
   origin: http://localhost:3000

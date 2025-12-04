@@ -68,25 +68,33 @@ public class JwtManager {
     }
 
     public String generateToken(Map<String, Object> extraClaims, User user) {
-        return buildToken(extraClaims, user, jwtProperties.getValidity());
+        return buildToken(extraClaims, user.getEmail(), jwtProperties.getValidity());
     }
 
     public Integer getExpirationTime() {
         return jwtProperties.getValidity();
     }
 
+    public String generateChallengeToken(String challenge) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("challenge", challenge);
+        return buildToken(claims, "challenge-token", 300); // 5 minutes validity
+    }
+
+    public String extractChallenge(String token) {
+        return extractClaim(token, claims -> claims.get("challenge", String.class));
+    }
 
     private String buildToken(
             Map<String, Object> extraClaims,
-            User user,
-            long expiration
-    ) {
+            String subject,
+            long expiration) {
 
         Instant now = clock.instant();
 
         JwtBuilder builder = Jwts
                 .builder()
-                .subject(user.getEmail())
+                .subject(subject)
                 .issuer(jwtProperties.getIssuer())
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(now.plusSeconds(expiration)));

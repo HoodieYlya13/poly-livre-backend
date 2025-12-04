@@ -31,4 +31,7 @@ public class User extends AuditDateEntity {
     @Column(name = "MAGIC_LINK_TOKEN_EXPIRATION", columnDefinition = "TIMESTAMP WITH TIME ZONE")
     private Instant magicLinkTokenExpiration;
 
+    @Column(name = "CURRENT_CHALLENGE", columnDefinition = "VARCHAR(255)")
+    private String currentChallenge;
+
 }
