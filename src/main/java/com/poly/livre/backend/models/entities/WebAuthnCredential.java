@@ -27,6 +27,9 @@ public class WebAuthnCredential extends AuditDateEntity {
     @Column(name = "SIGN_COUNT", columnDefinition = "BIGINT", nullable = false)
     private long signCount;
 
+    @Column(name = "NAME", columnDefinition = "VARCHAR(255)")
+    private String name;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "USER_ID", referencedColumnName = "ID")
     private User user;

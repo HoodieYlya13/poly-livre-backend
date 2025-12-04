@@ -11,6 +11,7 @@ import com.webauthn4j.credential.CredentialRecordImpl;
 import com.webauthn4j.data.AuthenticationParameters;
 import com.webauthn4j.data.AuthenticationRequest;
 import com.webauthn4j.data.PublicKeyCredentialCreationOptions;
+import com.webauthn4j.data.PublicKeyCredentialDescriptor;
 import com.webauthn4j.data.PublicKeyCredentialParameters;
 import com.webauthn4j.data.PublicKeyCredentialRpEntity;
 import com.webauthn4j.data.PublicKeyCredentialRequestOptions;
@@ -85,6 +86,15 @@ public class WebAuthnService {
                                 new PublicKeyCredentialParameters(PublicKeyCredentialType.PUBLIC_KEY,
                                                 COSEAlgorithmIdentifier.RS256));
 
+                List<PublicKeyCredentialDescriptor> excludeCredentials = credentialRepository
+                                .findAllByUserId(user.getId())
+                                .stream()
+                                .map(credential -> new PublicKeyCredentialDescriptor(
+                                                PublicKeyCredentialType.PUBLIC_KEY,
+                                                java.util.Base64.getUrlDecoder().decode(credential.getCredentialId()),
+                                                null)) // transports
+                                .toList();
+
                 AuthenticatorSelectionCriteria authenticatorSelection = new AuthenticatorSelectionCriteria(
                                 AuthenticatorAttachment.PLATFORM,
                                 true, // requireResidentKey
@@ -96,7 +106,7 @@ public class WebAuthnService {
                                 challenge,
                                 pubKeyCredParams,
                                 60000L, // timeout
-                                Collections.emptyList(), // excludeCredentials
+                                excludeCredentials,
                                 authenticatorSelection,
                                 AttestationConveyancePreference.NONE,
                                 null // extensions
@@ -190,13 +200,14 @@ public class WebAuthnService {
         }
 
         @Transactional
-        public void finishRegistration(User user, RegistrationFinishRequest request) {
+        public void finishRegistration(User user, String name, RegistrationFinishRequest request) {
                 RegistrationRequest registrationRequest = new RegistrationRequest(
                                 java.util.Base64.getUrlDecoder().decode(request.getResponse().getAttestationObject()),
                                 java.util.Base64.getUrlDecoder().decode(request.getResponse().getClientDataJSON()));
 
                 String savedChallenge = user.getCurrentChallenge();
-                if (savedChallenge == null) throw new RuntimeException("No challenge found for user");
+                if (savedChallenge == null)
+                        throw new RuntimeException("No challenge found for user");
 
                 Challenge challenge = new DefaultChallenge(java.util.Base64.getUrlDecoder().decode(savedChallenge));
 
@@ -229,6 +240,7 @@ public class WebAuthnService {
                                 .user(user)
                                 .publicKey(publicKeyString)
                                 .signCount(authenticatorData.getSignCount())
+                                .name(name)
                                 .build();
 
                 credentialRepository.save(credential);
@@ -268,7 +280,8 @@ public class WebAuthnService {
                 );
 
                 String savedChallenge = user.getCurrentChallenge();
-                if (savedChallenge == null) throw new RuntimeException("No challenge found for user");
+                if (savedChallenge == null)
+                        throw new RuntimeException("No challenge found for user");
                 Challenge challenge = new DefaultChallenge(java.util.Base64.getUrlDecoder().decode(savedChallenge));
 
                 AuthenticationParameters authenticationParameters = new AuthenticationParameters(

@@ -79,11 +79,11 @@ public class AuthenticationService {
     }
 
     @Transactional
-    public void finishPasskeyRegistration(String email, RegistrationFinishRequest request) {
+    public void finishPasskeyRegistration(String email, String name, RegistrationFinishRequest request) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ForbiddenException(AuthenticationErrorCode.FAILED));
 
-        webAuthnService.finishRegistration(user, request);
+        webAuthnService.finishRegistration(user, name, request);
     }
 
     @Transactional
@@ -108,7 +108,8 @@ public class AuthenticationService {
     @Transactional
     public AuthenticationResponse finishDiscoverableLogin(String challengeToken, AuthenticationFinishRequest request) {
         String challenge = jwtManager.extractChallenge(challengeToken);
-        if (challenge == null) throw new ForbiddenException(AuthenticationErrorCode.FAILED);
+        if (challenge == null)
+            throw new ForbiddenException(AuthenticationErrorCode.FAILED);
 
         User user = webAuthnService.finishDiscoverableLogin(challenge, request);
         return generateAuthResponse(user);
