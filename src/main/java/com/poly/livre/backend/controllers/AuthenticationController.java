@@ -6,11 +6,10 @@ import com.poly.livre.backend.models.dtos.RegistrationFinishRequest;
 import com.poly.livre.backend.services.AuthenticationService;
 import com.webauthn4j.data.PublicKeyCredentialCreationOptions;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
 import com.webauthn4j.data.PublicKeyCredentialRequestOptions;
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -20,6 +19,14 @@ public class AuthenticationController {
 
     private final AuthenticationService authenticationService;
 
+    @Value("${app.password}")
+    private String appPassword;
+    
+    @PostMapping("/testing-mode")
+    public boolean verifyTestingModePassword(@RequestBody String password) {
+        return appPassword.equals(password);
+    }
+    
     @PostMapping("/magic-link/request")
     public void requestMagicLink(@RequestParam String email) {
         authenticationService.requestMagicLink(email);

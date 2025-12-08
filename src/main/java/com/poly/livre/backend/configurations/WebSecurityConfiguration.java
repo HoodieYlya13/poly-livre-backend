@@ -36,6 +36,7 @@ public class WebSecurityConfiguration implements WebMvcConfigurer {
                                                 .requestMatchers(HttpMethod.GET, "/v3/api-docs/**").permitAll()
                                                 .requestMatchers(HttpMethod.GET, "/swagger-ui/**").permitAll()
 
+                                                .requestMatchers(HttpMethod.POST, "/auth/testing-mode").permitAll()
                                                 .requestMatchers(HttpMethod.POST, "/auth/magic-link/**").permitAll()
                                                 .requestMatchers(HttpMethod.POST, "/auth/passkey/**").permitAll()
                                                 .requestMatchers(HttpMethod.POST, "/users/**").permitAll()
@@ -51,7 +52,7 @@ public class WebSecurityConfiguration implements WebMvcConfigurer {
         public void addCorsMappings(@NonNull CorsRegistry registry) {
                 registry.addMapping("/**")
                                 .exposedHeaders(HttpHeaders.CONTENT_DISPOSITION)
-                                .allowedOrigins("http://localhost:3000")
+                                .allowedOrigins("http://localhost:3000") // TODO: put inside .env
                                 .allowedMethods("*")
                                 .allowCredentials(true);
         }
