@@ -1,6 +1,7 @@
 .PHONY: build up down logs clean setup_env
 
 setup_env:
+	chmod +x setup_env.sh
 	./setup_env.sh
 
 build: setup_env
