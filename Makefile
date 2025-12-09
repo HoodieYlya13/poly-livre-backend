@@ -4,17 +4,17 @@ setup_env:
 	./setup_env.sh
 
 build: setup_env
-	docker-compose build
+	docker compose build
 
 up: setup_env
-	docker-compose up -d
+	docker compose up -d
 
 down:
-	docker-compose down
+	docker compose down
 
 logs:
-	docker-compose logs -f
+	docker compose logs -f
 
 clean:
-	docker-compose down -v
+	docker compose down -v
 	mvn clean
