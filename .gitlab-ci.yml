@@ -45,14 +45,15 @@ docker_build:
     - docker push $IMAGE_TAG
     - docker push $IMAGE_LATEST
   rules:
-    - if: $CI_COMMIT_BRANCH == "main"
+    # - if: $CI_COMMIT_BRANCH == "main"
 
 deploy_to_prod:
   stage: deploy
   image: willhallonline/ansible:latest
   rules:
-    - if: $CI_COMMIT_BRANCH == "main"
-      when: manual
+    # - if: $CI_COMMIT_BRANCH == "main"
+    #   when: manual
+    when: manual
   before_script:
     - eval $(ssh-agent -s)
     - echo "$SSH_DEPLOYMENT_KEY" | tr -d '\r' | ssh-add -
