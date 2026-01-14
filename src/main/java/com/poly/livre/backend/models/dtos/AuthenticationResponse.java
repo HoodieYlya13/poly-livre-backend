@@ -13,7 +13,7 @@ import java.util.UUID;
 @NoArgsConstructor
 public class AuthenticationResponse {
 
-    private UUID userId;
+    private UUID id;
     private String username;
     private String email;
     private String token;

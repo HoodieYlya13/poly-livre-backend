@@ -7,7 +7,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -18,16 +18,22 @@ services:
 
   backend:
     build: .
-    container_name: polylivre-backend
+    container_name: ${APPLICATION_NAME}
     ports:
-      - "8080:8080"
+      - "${BACKEND_END_PORT}:8080"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:${POSTGRES_PORT}/${POSTGRES_DB}
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       JWT_PRIVATE_KEY: ${JWT_PRIVATE_KEY}
       JWT_PUBLIC_KEY: ${JWT_PUBLIC_KEY}
       APP_PASSWORD: ${APP_PASSWORD}
+      FRONT_END_ORIGIN: ${FRONT_END_ORIGIN}
+      MAIL_PORT: ${MAIL_PORT}
+      HOST: ${HOST}
+      JWT_ALGORITHM: ${JWT_ALGORITHM}
+      ISSUER: ${ISSUER}
+      RP_NAME: ${RP_NAME}
     depends_on:
       postgres:
         condition: service_healthy
