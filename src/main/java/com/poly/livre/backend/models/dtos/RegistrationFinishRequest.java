@@ -18,6 +18,8 @@ public class RegistrationFinishRequest {
     private String type;
     private AuthenticatorResponse response;
     private Map<String, Object> clientExtensionResults;
+    private String email;
+    private String passkeyName;
 
     @Data
     @Builder

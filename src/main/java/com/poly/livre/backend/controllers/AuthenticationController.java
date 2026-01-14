@@ -10,6 +10,14 @@ import lombok.RequiredArgsConstructor;
 import com.webauthn4j.data.PublicKeyCredentialRequestOptions;
 
 import org.springframework.beans.factory.annotation.Value;
+import com.poly.livre.backend.models.dtos.PasskeyResponse;
+import com.poly.livre.backend.models.auth.CustomPrincipal;
+import com.poly.livre.backend.exceptions.ForbiddenException;
+import com.poly.livre.backend.exceptions.errors.AuthenticationErrorCode;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import com.poly.livre.backend.models.dtos.AuthenticationRequests.*;
+import java.util.List;
+
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -21,31 +29,31 @@ public class AuthenticationController {
 
     @Value("${app.password}")
     private String appPassword;
-    
+
     @PostMapping("/testing-mode")
     public boolean verifyTestingModePassword(@RequestBody String password) {
         return appPassword.equals(password);
     }
-    
+
     @PostMapping("/magic-link/request")
-    public void requestMagicLink(@RequestParam String email) {
-        authenticationService.requestMagicLink(email);
+    public void requestMagicLink(@RequestBody MagicLinkRequest request) {
+        authenticationService.requestMagicLink(request.getEmail());
     }
 
     @PostMapping("/magic-link/verify")
-    public AuthenticationResponse verifyMagicLink(@RequestParam String token) {
-        return authenticationService.verifyMagicLink(token);
+    public AuthenticationResponse verifyMagicLink(@RequestBody MagicLinkVerifyRequest request) {
+        return authenticationService.verifyMagicLink(request.getToken());
     }
 
     @PostMapping("/passkey/register/start")
-    public PublicKeyCredentialCreationOptions startPasskeyRegistration(@RequestParam String email) {
-        return authenticationService.startPasskeyRegistration(email);
+    public PublicKeyCredentialCreationOptions startPasskeyRegistration(
+            @RequestBody PasskeyRegisterStartRequest request) {
+        return authenticationService.startPasskeyRegistration(request.getEmail());
     }
 
     @PostMapping("/passkey/register/finish")
-    public void finishPasskeyRegistration(@RequestParam String email, @RequestParam String name,
-            @RequestBody RegistrationFinishRequest request) {
-        authenticationService.finishPasskeyRegistration(email, name, request);
+    public void finishPasskeyRegistration(@RequestBody RegistrationFinishRequest request) {
+        authenticationService.finishPasskeyRegistration(request.getEmail(), request.getPasskeyName(), request);
     }
 
     @PostMapping("/passkey/login/start")
@@ -60,9 +68,9 @@ public class AuthenticationController {
 
             jakarta.servlet.http.Cookie cookie = new jakarta.servlet.http.Cookie("challenge_token", token);
             cookie.setHttpOnly(true);
-            cookie.setSecure(false); // Should be true in production
+            cookie.setSecure(false); // TODO: Should be true in production
             cookie.setPath("/");
-            cookie.setMaxAge(300); // 5 minutes
+            cookie.setMaxAge(300); // 5 minutes // TODO: env var ?
             response.addCookie(cookie);
 
             return (PublicKeyCredentialRequestOptions) result.get("options");
@@ -91,6 +99,34 @@ public class AuthenticationController {
 
             return authenticationService.finishDiscoverableLogin(challengeToken, request);
         }
+    }
+
+    @GetMapping("/passkeys/{userId}")
+    public List<PasskeyResponse> getUserPasskeys(@PathVariable String userId,
+            @AuthenticationPrincipal CustomPrincipal user) {
+        if (!user.getId().toString().equals(userId)) {
+            throw new ForbiddenException(AuthenticationErrorCode.FAILED);
+        }
+        return authenticationService.getUserPasskeys(userId);
+    }
+
+    @PutMapping("/passkeys/{userId}/{passkeyId}")
+    public void renamePasskey(@PathVariable String userId, @PathVariable String passkeyId,
+            @RequestBody RenamePasskeyRequest request,
+            @AuthenticationPrincipal CustomPrincipal user) {
+        if (!user.getId().toString().equals(userId)) {
+            throw new ForbiddenException(AuthenticationErrorCode.FAILED);
+        }
+        authenticationService.renamePasskey(userId, passkeyId, request.getPasskeyName());
+    }
+
+    @DeleteMapping("/passkeys/{userId}/{passkeyId}")
+    public void deletePasskey(@PathVariable String userId, @PathVariable String passkeyId,
+            @AuthenticationPrincipal CustomPrincipal user) {
+        if (!user.getId().toString().equals(userId)) {
+            throw new ForbiddenException(AuthenticationErrorCode.FAILED);
+        }
+        authenticationService.deletePasskey(userId, passkeyId);
     }
 
 }

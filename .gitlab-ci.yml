@@ -1,21 +1,13 @@
-image: maven:3-eclipse-temurin-21
-
-variables:
-  MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
-  POSTGRES_DB: testdb
-  POSTGRES_USER: testuser
-  POSTGRES_PASSWORD: testpassword
-  POSTGRES_HOST_AUTH_METHOD: trust
-  HOST: postgres
-  POSTGRES_PORT: 5432
-  SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/$POSTGRES_DB
-  SPRING_DATASOURCE_USERNAME: $POSTGRES_USER
-  SPRING_DATASOURCE_PASSWORD: $POSTGRES_PASSWORD
-
 stages:
   - build
   - test
   - package
+  - deploy
+
+variables:
+  MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
+  IMAGE_TAG: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
+  IMAGE_LATEST: $CI_REGISTRY_IMAGE:latest
 
 cache:
   paths:
@@ -23,14 +15,21 @@ cache:
 
 build_job:
   stage: build
+  image: maven:3-eclipse-temurin-21
   script:
     - mvn clean compile
 
 test_job:
   stage: test
+  image: maven:3-eclipse-temurin-21
   services:
     - name: postgres:16-alpine
       alias: postgres
+  variables:
+    POSTGRES_DB: testdb
+    POSTGRES_USER: testuser
+    POSTGRES_PASSWORD: testpassword
+    SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/testdb
   script:
     - mvn test
 
@@ -39,14 +38,27 @@ docker_build:
   image: docker:24.0.5
   services:
     - docker:24.0.5-dind
-  variables:
-    DOCKER_TLS_CERTDIR: ""
-  before_script:
-    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
-    - docker build -t $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA .
-    - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
-    - docker tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA $CI_REGISTRY_IMAGE:latest
-    - docker push $CI_REGISTRY_IMAGE:latest
-  # only:
-  #   - main
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker build -t $IMAGE_TAG .
+    - docker tag $IMAGE_TAG $IMAGE_LATEST
+    - docker push $IMAGE_TAG
+    - docker push $IMAGE_LATEST
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+
+deploy_to_prod:
+  stage: deploy
+  image: willhallonline/ansible:latest
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: manual
+  before_script:
+    - eval $(ssh-agent -s)
+    - echo "$SSH_DEPLOYMENT_KEY" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
+  script:
+    - echo "Deploying Docker App via Ansible..."
+    - ansible-playbook -i ansible/inventory.ini ansible/playbook.yml --extra-vars "gitlab_user=$CI_REGISTRY_USER gitlab_token=$CI_REGISTRY_PASSWORD gitlab_registry=$CI_REGISTRY app_image=$IMAGE_LATEST"
