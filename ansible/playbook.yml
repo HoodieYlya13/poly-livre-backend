@@ -1,0 +1,74 @@
+---
+- hosts: webserver
+  become: true
+
+  vars:
+    gitlab_user: ""
+    gitlab_token: ""
+    gitlab_registry: ""
+    app_image: ""
+    
+    db_name: polylivre
+    db_user: postgres
+    db_pass: secure_password_change_me_later 
+
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Install Docker and Python dependencies
+      apt:
+        name:
+          - docker.io
+          - python3-docker
+        state: present
+
+    - name: Stop running backend container
+      community.docker.docker_container:
+        name: poly-backend
+        state: absent
+        force_kill: yes
+      ignore_errors: yes 
+
+    - name: Create a shared network
+      community.docker.docker_network:
+        name: poly-network
+
+    - name: Log into GitLab Registry
+      community.docker.docker_login:
+        registry: "{{ gitlab_registry }}"
+        username: "{{ gitlab_user }}"
+        password: "{{ gitlab_token }}"
+
+    - name: Start Postgres Database
+      community.docker.docker_container:
+        name: poly-db
+        image: postgres:16-alpine
+        networks:
+          - name: poly-network
+        env:
+          POSTGRES_DB: "{{ db_name }}"
+          POSTGRES_USER: "{{ db_user }}"
+          POSTGRES_PASSWORD: "{{ db_pass }}"
+        volumes:
+          - db_data:/var/lib/postgresql/data
+        state: started
+        restart_policy: always
+
+    - name: Start Spring Boot Backend
+      community.docker.docker_container:
+        name: poly-backend
+        image: "{{ app_image }}"
+        pull: always
+        networks:
+          - name: poly-network
+        ports:
+          - "80:8080"
+        env:
+          SPRING_DATASOURCE_URL: "jdbc:postgresql://poly-db:5432/{{ db_name }}"
+          SPRING_DATASOURCE_USERNAME: "{{ db_user }}"
+          SPRING_DATASOURCE_PASSWORD: "{{ db_pass }}"
+        state: started
+        restart_policy: always
