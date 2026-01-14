@@ -1,7 +1,9 @@
 spring:
   application.name: "${APPLICATION_NAME:poly-livre-backend}"
+  app:
+    password: "${APP_PASSWORD:IA2R_Owners}"
   datasource:
-    url: "jdbc:postgresql://${HOST}:${POSTGRES_PORT}/${POSTGRES_DB}"
+    url: "jdbc:postgresql://${HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:poly_livre_db}"
     username: "${POSTGRES_USER:username}"
     password: "${POSTGRES_PASSWORD:password}"
     driverClassName: org.postgresql.Driver
