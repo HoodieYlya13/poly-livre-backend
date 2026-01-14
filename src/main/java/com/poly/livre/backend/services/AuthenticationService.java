@@ -20,7 +20,9 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
+import com.poly.livre.backend.models.dtos.PasskeyResponse;
 import com.poly.livre.backend.models.entities.User;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -98,6 +100,27 @@ public class AuthenticationService {
         webAuthnService.finishLogin(user, request);
 
         return generateAuthResponse(user);
+    }
+
+    @Transactional(readOnly = true)
+    public List<PasskeyResponse> getUserPasskeys(String userId) {
+        User user = userRepository.findById(UUID.fromString(userId))
+                .orElseThrow(() -> new ForbiddenException(AuthenticationErrorCode.FAILED));
+        return webAuthnService.getPasskeys(user);
+    }
+
+    @Transactional
+    public void renamePasskey(String userId, String passkeyId, String name) {
+        User user = userRepository.findById(UUID.fromString(userId))
+                .orElseThrow(() -> new ForbiddenException(AuthenticationErrorCode.FAILED));
+        webAuthnService.renamePasskey(user, passkeyId, name);
+    }
+
+    @Transactional
+    public void deletePasskey(String userId, String passkeyId) {
+        User user = userRepository.findById(UUID.fromString(userId))
+                .orElseThrow(() -> new ForbiddenException(AuthenticationErrorCode.FAILED));
+        webAuthnService.deletePasskey(user, passkeyId);
     }
 
     @Transactional

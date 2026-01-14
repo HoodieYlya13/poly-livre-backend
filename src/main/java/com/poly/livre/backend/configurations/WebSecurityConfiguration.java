@@ -45,7 +45,9 @@ public class WebSecurityConfiguration implements WebMvcConfigurer {
                                                 .requestMatchers(HttpMethod.POST, "/auth/passkey/**").permitAll()
                                                 .requestMatchers(HttpMethod.POST, "/users/**").permitAll()
 
+                                                .requestMatchers("/auth/passkeys/**").authenticated()
                                                 .anyRequest().authenticated())
+
                                 .addFilterBefore(new JwtAuthenticationFilter(objectMapper, userRepository, jwtManager),
                                                 AnonymousAuthenticationFilter.class);
 

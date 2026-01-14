@@ -301,4 +301,41 @@ public class WebAuthnService {
                 credentialRepository.save(credential);
         }
 
+        public List<com.poly.livre.backend.models.dtos.PasskeyResponse> getPasskeys(User user) {
+                return credentialRepository.findAllByUserId(user.getId()).stream()
+                                .map(credential -> com.poly.livre.backend.models.dtos.PasskeyResponse.builder()
+                                                .id(credential.getId().toString())
+                                                .name(credential.getName())
+                                                .createdAt(credential.getCreatedAt())
+                                                .build())
+                                .toList();
+        }
+
+        @Transactional
+        public void renamePasskey(User user, String passkeyId, String newName) {
+                WebAuthnCredential credential = credentialRepository.findById(java.util.UUID.fromString(passkeyId))
+                                .orElseThrow(() -> new RuntimeException("Passkey not found"));
+
+                if (!credential.getUser().getId().equals(user.getId())) {
+                        throw new com.poly.livre.backend.exceptions.ForbiddenException(
+                                        com.poly.livre.backend.exceptions.errors.AuthenticationErrorCode.FAILED);
+                }
+
+                credential.setName(newName);
+                credentialRepository.save(credential);
+        }
+
+        @Transactional
+        public void deletePasskey(User user, String passkeyId) {
+                WebAuthnCredential credential = credentialRepository.findById(java.util.UUID.fromString(passkeyId))
+                                .orElseThrow(() -> new RuntimeException("Passkey not found"));
+
+                if (!credential.getUser().getId().equals(user.getId())) {
+                        throw new com.poly.livre.backend.exceptions.ForbiddenException(
+                                        com.poly.livre.backend.exceptions.errors.AuthenticationErrorCode.FAILED);
+                }
+
+                credentialRepository.delete(credential);
+        }
+
 }
