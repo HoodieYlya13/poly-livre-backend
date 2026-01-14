@@ -5,6 +5,7 @@ import com.poly.livre.backend.authentications.JwtAuthenticationFilter;
 import com.poly.livre.backend.managers.JwtManager;
 import com.poly.livre.backend.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
@@ -21,6 +22,9 @@ import org.springframework.lang.NonNull;
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class WebSecurityConfiguration implements WebMvcConfigurer {
+
+        @Value("${webauthn.origin}")
+        private String frontEndOrigin;
 
         private final ObjectMapper objectMapper;
         private final JwtManager jwtManager;
@@ -52,7 +56,7 @@ public class WebSecurityConfiguration implements WebMvcConfigurer {
         public void addCorsMappings(@NonNull CorsRegistry registry) {
                 registry.addMapping("/**")
                                 .exposedHeaders(HttpHeaders.CONTENT_DISPOSITION)
-                                .allowedOrigins("http://localhost:3000") // TODO: put inside .env
+                                .allowedOrigins(frontEndOrigin)
                                 .allowedMethods("*")
                                 .allowCredentials(true);
         }

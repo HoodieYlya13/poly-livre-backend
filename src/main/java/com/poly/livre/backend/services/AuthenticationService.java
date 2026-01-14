@@ -10,6 +10,7 @@ import com.poly.livre.backend.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,6 +33,9 @@ public class AuthenticationService {
     private final WebAuthnService webAuthnService;
     private final Clock clock;
 
+    @Value("${webauthn.origin}")
+    private String frontEndOrigin;
+
     @Transactional
     public void requestMagicLink(String email) {
         User user = userRepository.findByEmail(email)
@@ -44,7 +48,7 @@ public class AuthenticationService {
         user.setMagicLinkTokenExpiration(Instant.now(clock).plus(15, ChronoUnit.MINUTES));
         userRepository.save(user);
 
-        emailService.sendMagicLink(email, "http://localhost:3000/auth/magic-link?token=" + token);
+        emailService.sendMagicLink(email, frontEndOrigin + "/auth/magic-link?token=" + token);
     }
 
     @Transactional
@@ -126,7 +130,7 @@ public class AuthenticationService {
         String accessToken = jwtManager.generateToken(user);
         return AuthenticationResponse.builder()
                 .token(accessToken)
-                .userId(user.getId())
+                .id(user.getId())
                 .username(user.getUsername())
                 .email(user.getEmail())
                 .expiresIn(jwtManager.getExpirationTime())
