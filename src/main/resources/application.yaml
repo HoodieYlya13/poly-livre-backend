@@ -2,6 +2,12 @@ app:
   password: "${APP_PASSWORD:IA2R_Owners}"
 
 spring:
+  threads:
+    virtual:
+      enabled: true
+  main:
+    keep-alive: true
+
   application.name: "${APPLICATION_NAME:poly-livre-backend}"
   datasource:
     url: "jdbc:postgresql://${HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:poly_livre_db}"
@@ -29,7 +35,7 @@ spring:
 jwt:
   privateKey: "${JWT_PRIVATE_KEY:MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgO8Nm9Rv9Kz2J7TLtdoIjHDL5Mo4WCWS0ixQfGwxBqGahRANCAAQpbN6OWGmhJFO99NzDu89U2HjIFzIDw8417Y7LFqTJ3+FJXv99EDPjHfJhZKkuD66FEjUflmadCFHdy1dkss1j}"
   publicKey: "${JWT_PUBLIC_KEY:MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEKWzejlhpoSRTvfTcw7vPVNh4yBcyA8PONe2Oyxakyd/hSV7/fRAz4x3yYWSpLg+uhRI1H5ZmnQhR3ctXZLLNYw==}"
-  validity: 3600
+  validity: "${JWT_VALIDITY:3600}"
   algorithm: "${JWT_ALGORITHM:EC}"
   issuer: "${ISSUER:backend-poly-livre}"
 
