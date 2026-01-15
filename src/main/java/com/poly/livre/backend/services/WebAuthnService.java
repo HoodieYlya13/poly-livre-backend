@@ -326,7 +326,7 @@ public class WebAuthnService {
         }
 
         @Transactional
-        public void deletePasskey(User user, String passkeyId) {
+        public String deletePasskey(User user, String passkeyId) {
                 WebAuthnCredential credential = credentialRepository.findById(java.util.UUID.fromString(passkeyId))
                                 .orElseThrow(() -> new RuntimeException("Passkey not found"));
 
@@ -335,7 +335,9 @@ public class WebAuthnService {
                                         com.poly.livre.backend.exceptions.errors.AuthenticationErrorCode.FAILED);
                 }
 
+                String passkeyName = credential.getName();
                 credentialRepository.delete(credential);
+                return passkeyName;
         }
 
 }

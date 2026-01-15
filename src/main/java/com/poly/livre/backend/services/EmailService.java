@@ -26,4 +26,32 @@ public class EmailService {
         }
     }
 
+    public void sendPasskeyAdded(String to, String passkeyName) {
+        log.info("Sending passkey added email to {}", to);
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setTo(to);
+            message.setSubject("Security Alert: New Passkey Added");
+            message.setText("A new passkey named '" + passkeyName + "' has been added to your account.\n\n" +
+                    "If this wasn't you, please contact support immediately.");
+            mailSender.send(message);
+        } catch (Exception e) {
+            log.error("Failed to send passkey added email: {}", e.getMessage());
+        }
+    }
+
+    public void sendPasskeyRemoved(String to, String passkeyName) {
+        log.info("Sending passkey removed email to {}", to);
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setTo(to);
+            message.setSubject("Security Alert: Passkey Removed");
+            message.setText("The passkey named '" + passkeyName + "' has been removed from your account.\n\n" +
+                    "If this wasn't you, please contact support immediately.");
+            mailSender.send(message);
+        } catch (Exception e) {
+            log.error("Failed to send passkey removed email: {}", e.getMessage());
+        }
+    }
+
 }

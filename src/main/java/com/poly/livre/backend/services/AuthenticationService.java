@@ -90,6 +90,7 @@ public class AuthenticationService {
                 .orElseThrow(() -> new ForbiddenException(AuthenticationErrorCode.FAILED));
 
         webAuthnService.finishRegistration(user, name, request);
+        emailService.sendPasskeyAdded(user.getEmail(), name);
     }
 
     @Transactional
@@ -120,7 +121,8 @@ public class AuthenticationService {
     public void deletePasskey(String userId, String passkeyId) {
         User user = userRepository.findById(UUID.fromString(userId))
                 .orElseThrow(() -> new ForbiddenException(AuthenticationErrorCode.FAILED));
-        webAuthnService.deletePasskey(user, passkeyId);
+        String passkeyName = webAuthnService.deletePasskey(user, passkeyId);
+        emailService.sendPasskeyRemoved(user.getEmail(), passkeyName);
     }
 
     @Transactional
@@ -162,6 +164,20 @@ public class AuthenticationService {
 
     private String hashToken(String token) {
         return DigestUtils.sha256Hex(token);
+    }
+
+    @Transactional
+    public void logout(String token) {
+        if (token == null || token.isBlank()) return;
+
+        if (token.startsWith("Bearer ")) token = token.substring(7);
+
+        String email = jwtManager.extractUsername(token);
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ForbiddenException(AuthenticationErrorCode.FAILED));
+
+        user.setLastLogoutAt(Instant.now());
+        userRepository.save(user);
     }
 
 }

@@ -35,6 +35,11 @@ public class AuthenticationController {
         return appPassword.equals(password);
     }
 
+    @PostMapping("/logout")
+    public void logout(@RequestHeader("Authorization") String token) {
+        authenticationService.logout(token);
+    }
+
     @PostMapping("/magic-link/request")
     public void requestMagicLink(@RequestBody MagicLinkRequest request) {
         authenticationService.requestMagicLink(request.getEmail());

@@ -34,4 +34,7 @@ public class User extends AuditDateEntity {
     @Column(name = "CURRENT_CHALLENGE", columnDefinition = "VARCHAR(255)")
     private String currentChallenge;
 
+    @Column(name = "LAST_LOGOUT_AT", columnDefinition = "TIMESTAMP WITH TIME ZONE")
+    private Instant lastLogoutAt;
+
 }

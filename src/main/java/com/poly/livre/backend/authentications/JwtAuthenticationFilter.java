@@ -60,6 +60,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 User user = this.userRepository.findByEmail(userEmail)
                         .orElseThrow(() -> new NotFoundException(UserErrorCode.NOT_FOUND));
 
+                if (user.getLastLogoutAt() != null) {
+                    java.util.Date issuedAt = jwtManager.extractClaim(jwt.get(), io.jsonwebtoken.Claims::getIssuedAt);
+                    if (issuedAt.before(java.util.Date.from(user.getLastLogoutAt()))) {
+                        respondWithUnauthorizedError(request, response, AuthenticationErrorCode.JWT_INVALID);
+                        return;
+                    }
+                }
+
                 if (jwtManager.isTokenValid(jwt.get(), user)) {
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                             new CustomPrincipal(user),
@@ -75,11 +83,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         } catch (NotFoundException | SecurityException | SignatureException e) {
             log.error("Could not authenticate user", e);
-            // This error happens if the given JWT is invalid
             respondWithUnauthorizedError(request, response, AuthenticationErrorCode.JWT_INVALID);
         } catch (ExpiredJwtException e) {
             log.error("Current JWT has expired", e);
-            // This error happens if the given JWT has expired
             respondWithUnauthorizedError(request, response, AuthenticationErrorCode.JWT_EXPIRED);
         }
     }
@@ -118,5 +124,5 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         ErrorMessage errorMessage = ErrorMessage.fromErrorCode(error);
         objectMapper.writeValue(response.getOutputStream(), errorMessage);
     }
-    
+
 }

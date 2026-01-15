@@ -40,13 +40,17 @@ public class WebSecurityConfiguration implements WebMvcConfigurer {
                                                 .requestMatchers(HttpMethod.GET, "/v3/api-docs/**").permitAll()
                                                 .requestMatchers(HttpMethod.GET, "/swagger-ui/**").permitAll()
 
+                                                .requestMatchers(HttpMethod.POST, "/auth/logout").authenticated()
                                                 .requestMatchers(HttpMethod.POST, "/auth/testing-mode").permitAll()
                                                 .requestMatchers(HttpMethod.POST, "/auth/magic-link/**").permitAll()
                                                 .requestMatchers(HttpMethod.POST, "/auth/passkey/**").permitAll()
-                                                .requestMatchers(HttpMethod.POST, "/users/**").permitAll()
+                                                .requestMatchers(HttpMethod.POST, "/users/**").authenticated()
 
                                                 .requestMatchers("/auth/passkeys/**").authenticated()
                                                 .anyRequest().authenticated())
+                                .sessionManagement(session -> session
+                                                .sessionCreationPolicy(
+                                                                org.springframework.security.config.http.SessionCreationPolicy.STATELESS))
 
                                 .addFilterBefore(new JwtAuthenticationFilter(objectMapper, userRepository, jwtManager),
                                                 AnonymousAuthenticationFilter.class);
