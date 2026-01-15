@@ -5,3 +5,5 @@ util make commands:
 - make down
 - make logs
 - make clean
+
+open http://localhost:8025 to see mailhog

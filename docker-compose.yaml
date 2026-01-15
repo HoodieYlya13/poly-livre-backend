@@ -30,14 +30,22 @@ services:
       JWT_VALIDITY: ${JWT_VALIDITY}
       APP_PASSWORD: ${APP_PASSWORD}
       FRONT_END_ORIGIN: ${FRONT_END_ORIGIN}
-      MAIL_PORT: ${MAIL_PORT}
-      HOST: ${HOST}
-      JWT_ALGORITHM: ${JWT_ALGORITHM}
-      ISSUER: ${ISSUER}
       RP_NAME: ${RP_NAME}
+      SPRING_MAIL_HOST: mailpit
+      SPRING_MAIL_PORT: 1025
     depends_on:
       postgres:
         condition: service_healthy
+      mailpit:
+        condition: service_started
+
+  mailpit:
+    image: axllent/mailpit
+    container_name: polylivre-mail
+    ports:
+      - "${MAIL_PORT}:1025"
+      - "8025:8025"
+    platform: linux/amd64
 
 volumes:
   postgres_data:

@@ -19,16 +19,16 @@ spring:
     hibernate:
       ddl-auto: update
   mail:
-    host: "${HOST:localhost}"
+    host: "${MAIL_HOST:localhost}"
     port: "${MAIL_PORT:1025}"
-    username: null
-    password: null
+    username: "${MAIL_USERNAME:}"
+    password: "${MAIL_PASSWORD:}"
     properties:
       mail:
         smtp:
-          auth: false
+          auth: "${MAIL_AUTH:false}"
           starttls:
-            enable: false
+            enable: "${MAIL_STARTTLS:false}"
   jackson:
     default-property-inclusion: non_null
 
