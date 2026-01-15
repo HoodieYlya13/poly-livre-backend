@@ -3,34 +3,34 @@ services:
     image: postgres:16-alpine
     container_name: polylivre-postgres
     environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-polylivredb}
+      POSTGRES_USER: ${POSTGRES_USER:-username}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
     ports:
-      - "${POSTGRES_PORT}:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-username} -d ${POSTGRES_DB:-polylivredb}"]
       interval: 5s
       timeout: 5s
       retries: 5
 
   backend:
     build: .
-    container_name: ${APPLICATION_NAME}
+    container_name: ${APPLICATION_NAME:-poly-livre-backend}
     ports:
-      - "${BACKEND_END_PORT}:8080"
+      - "${BACKEND_END_PORT:-8080}:8080"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:${POSTGRES_PORT}/${POSTGRES_DB}
-      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
-      JWT_PRIVATE_KEY: ${JWT_PRIVATE_KEY}
-      JWT_PUBLIC_KEY: ${JWT_PUBLIC_KEY}
-      JWT_VALIDITY: ${JWT_VALIDITY}
-      APP_PASSWORD: ${APP_PASSWORD}
-      FRONT_END_ORIGIN: ${FRONT_END_ORIGIN}
-      RP_NAME: ${RP_NAME}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-polylivredb}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-username}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      JWT_PRIVATE_KEY: ${JWT_PRIVATE_KEY:-MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgO8Nm9Rv9Kz2J7TLtdoIjHDL5Mo4WCWS0ixQfGwxBqGahRANCAAQpbN6OWGmhJFO99NzDu89U2HjIFzIDw8417Y7LFqTJ3+FJXv99EDPjHfJhZKkuD66FEjUflmadCFHdy1dkss1j}
+      JWT_PUBLIC_KEY: ${JWT_PUBLIC_KEY:-MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEKWzejlhpoSRTvfTcw7vPVNh4yBcyA8PONe2Oyxakyd/hSV7/fRAz4x3yYWSpLg+uhRI1H5ZmnQhR3ctXZLLNYw==}
+      JWT_VALIDITY: ${JWT_VALIDITY:-3600}
+      APP_PASSWORD: ${APP_PASSWORD:-IA2R_Owners}
+      FRONT_END_ORIGIN: ${FRONT_END_ORIGIN:-http://localhost:3000}
+      RP_NAME: ${RP_NAME:-Liprerie}
       SPRING_MAIL_HOST: mailpit
       SPRING_MAIL_PORT: 1025
     depends_on:
@@ -43,7 +43,7 @@ services:
     image: axllent/mailpit
     container_name: polylivre-mail
     ports:
-      - "${MAIL_PORT}:1025"
+      - "${MAIL_PORT:-1025}:1025"
       - "8025:8025"
     platform: linux/amd64
 
