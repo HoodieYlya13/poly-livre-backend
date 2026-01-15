@@ -9,10 +9,10 @@ import lombok.ToString;
 @ToString
 public enum AuthenticationErrorCode implements ErrorCode {
 
-    FAILED("AUTH_001", "Authentication failed"),
-    UNAUTHORIZED("AUTH_002", "Unauthorized (NOT USED YET)"),
-    JWT_INVALID("AUTH_003", "Invalid JWT token"),
-    JWT_EXPIRED("AUTH_004", "JWT token expired");
+    FAILED("AUTH.001", "Authentication failed"),
+    UNAUTHORIZED("AUTH.002", "Unauthorized (NOT USED YET)"),
+    JWT_INVALID("AUTH.003", "Invalid JWT token"),
+    JWT_EXPIRED("AUTH.004", "JWT token expired");
 
     private final String code;
     private final String description;
