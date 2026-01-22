@@ -34,4 +34,12 @@ public class BookService {
                 .map(bookConverter::convert)
                 .toList();
     }
+
+    @Transactional(readOnly = true)
+    public List<BookDto> getAllBooks() {
+        return bookRepository.findAll()
+                .stream()
+                .map(bookConverter::convert)
+                .toList();
+    }
 }

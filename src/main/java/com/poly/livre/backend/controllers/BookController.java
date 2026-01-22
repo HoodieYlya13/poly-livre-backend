@@ -19,7 +19,7 @@ public class BookController {
 
     private final BookService bookService;
 
-    @GetMapping("/{id}")
+    @GetMapping("/{id:[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}}")
     public ResponseEntity<BookDto> getBookById(@PathVariable UUID id) {
         return ResponseEntity.ok(bookService.getBookById(id));
     }
@@ -27,5 +27,10 @@ public class BookController {
     @GetMapping("/trending")
     public ResponseEntity<List<BookDto>> getTrendingBooks() {
         return ResponseEntity.ok(bookService.getTrendingBooks());
+    }
+
+    @GetMapping("/all")
+    public ResponseEntity<List<BookDto>> getAllBooks() {
+        return ResponseEntity.ok(bookService.getAllBooks());
     }
 }
