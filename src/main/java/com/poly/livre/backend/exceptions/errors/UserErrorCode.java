@@ -9,7 +9,9 @@ import lombok.ToString;
 @ToString
 public enum UserErrorCode implements ErrorCode {
 
-    NOT_FOUND("USER.001", "User not found");
+    NOT_FOUND("USER.001", "User not found"),
+    USERNAME_MISMATCH("USER.002", "Username mismatch"),
+    INVALID_STATUS("USER.003", "Invalid status: %s");
 
     private final String code;
     private final String description;

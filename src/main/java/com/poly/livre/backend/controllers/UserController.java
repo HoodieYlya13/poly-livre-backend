@@ -1,8 +1,10 @@
 package com.poly.livre.backend.controllers;
 
 import com.poly.livre.backend.models.dtos.UserDto;
+import com.poly.livre.backend.models.dtos.UserProfileValues;
 import com.poly.livre.backend.services.UserService;
 import io.swagger.v3.oas.annotations.Operation;
+import jakarta.validation.Valid;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -43,6 +45,20 @@ public class UserController {
     @PutMapping(path = "/{username}")
     public ResponseEntity<UserDto> updateUsername(@PathVariable @NonNull String username) {
         return ResponseEntity.ok(userService.updateUsername(username));
+    }
+
+    @Operation(summary = "Create user profile")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Profile created", content = {
+                    @Content(mediaType = "application/json", schema = @Schema(implementation = UserDto.class)) }),
+            @ApiResponse(responseCode = "400", description = "Invalid input or username mismatch"),
+            @ApiResponse(responseCode = "404", description = "User not found")
+    })
+    @PostMapping(path = "/{username}")
+    public ResponseEntity<UserDto> createProfile(
+            @PathVariable @NonNull String username,
+            @RequestBody @Valid UserProfileValues values) {
+        return ResponseEntity.ok(userService.createProfile(username, values));
     }
 
     @GetMapping(path = "/testimonials/{locale}")

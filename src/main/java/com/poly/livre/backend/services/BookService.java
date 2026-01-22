@@ -42,4 +42,15 @@ public class BookService {
                 .map(bookConverter::convert)
                 .toList();
     }
+
+    @Transactional
+    public BookDto addBook() {
+        BookDto newBook = BookDto.builder()
+                .title("New Book")
+                .description("Description of the new book")
+                .author("Author Name")
+                .price(19.99)
+                .build();
+        return newBook;
+    }
 }

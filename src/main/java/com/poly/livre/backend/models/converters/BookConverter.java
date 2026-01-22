@@ -70,4 +70,27 @@ public class BookConverter implements Converter<Book, BookDto> {
                 .createdAt(review.getCreatedAt())
                 .build();
     }
+
+    public Book convert(BookDto bookDto) {
+        if (bookDto == null) {
+            return null;
+        }
+        Book.BookBuilder builder = Book.builder();
+                builder
+                .id(bookDto.getId())
+                .title(bookDto.getTitle())
+                .description(bookDto.getDescription())
+                .author(bookDto.getAuthor())
+                .styles(bookDto.getStyles())
+                .rating(bookDto.getRating())
+                .price(bookDto.getPrice())
+                .pages(bookDto.getInformation() != null ? bookDto.getInformation().getPages() : null)
+                .year(bookDto.getInformation() != null ? bookDto.getInformation().getYear() : null)
+                .language(bookDto.getInformation() != null ? bookDto.getInformation().getLanguage() : null)
+                .delivery(bookDto.getInformation() != null ? bookDto.getInformation().getDelivery() : null)
+                .loanDuration(bookDto.getLoanDuration())
+                .loaned(bookDto.isLoaned())
+                .favorite(bookDto.isFavorite());
+        return builder.build();
+    }   
 }
