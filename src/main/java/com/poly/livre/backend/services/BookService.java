@@ -42,7 +42,6 @@ public class BookService {
                 .map(bookConverter::convert)
                 .toList();
     }
-}
 
     @Transactional
     public BookDto addBook() {

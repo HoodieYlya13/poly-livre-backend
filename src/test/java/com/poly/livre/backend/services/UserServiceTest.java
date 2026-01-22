@@ -8,6 +8,8 @@ import com.poly.livre.backend.models.converters.UserConverter;
 import com.poly.livre.backend.models.dtos.UserDto;
 import com.poly.livre.backend.models.entities.User;
 import com.poly.livre.backend.models.enums.UserStatus;
+import com.poly.livre.backend.models.dtos.UserProfileValues;
+import com.poly.livre.backend.exceptions.BadRequestException;
 import com.poly.livre.backend.repositories.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -96,7 +98,7 @@ class UserServiceTest {
     @Test
     void shouldReturnCurrentUserDto_WhenUserIsAuthenticated() {
         CustomPrincipal principal = new CustomPrincipal(user);
-        
+
         try (MockedStatic<SecurityContextHolder> securityContextHolder = mockStatic(SecurityContextHolder.class)) {
             SecurityContext securityContext = mock(SecurityContext.class);
             Authentication authentication = mock(Authentication.class);
@@ -204,6 +206,81 @@ class UserServiceTest {
 
             assertThatThrownBy(() -> userService.updateUsername("newusername"))
                     .isInstanceOf(ForbiddenException.class);
+        }
+    }
+
+    @Test
+    void shouldCreateProfile_WhenUserIsAuthenticatedAndDataIsValid() {
+        UserProfileValues values = new UserProfileValues("newuser", "New", "User", "TEACHER");
+        CustomPrincipal principal = new CustomPrincipal(user);
+
+        User updatedUser = User.builder()
+                .id(userId)
+                .username("newuser")
+                .email("test@example.com")
+                .firstName("New")
+                .lastName("User")
+                .status(UserStatus.TEACHER)
+                .build();
+
+        UserDto expectedDto = UserDto.builder()
+                .id(userId)
+                .username("newuser")
+                .email("test@example.com")
+                .firstName("New")
+                .lastName("User")
+                .status(UserStatus.TEACHER)
+                .build();
+
+        try (MockedStatic<SecurityContextHolder> securityContextHolder = mockStatic(SecurityContextHolder.class)) {
+            SecurityContext securityContext = mock(SecurityContext.class);
+            Authentication authentication = mock(Authentication.class);
+
+            securityContextHolder.when(SecurityContextHolder::getContext).thenReturn(securityContext);
+            when(securityContext.getAuthentication()).thenReturn(authentication);
+            when(authentication.getPrincipal()).thenReturn(principal);
+
+            when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+            when(userRepository.save(any(User.class))).thenReturn(updatedUser);
+            when(userConverter.convert(updatedUser)).thenReturn(expectedDto);
+            when(jwtManager.getExpirationTime()).thenReturn(3600);
+
+            UserDto result = userService.createProfile("newuser", values);
+
+            assertThat(result).isNotNull();
+            assertThat(result.getUsername()).isEqualTo("newuser");
+            assertThat(result.getStatus()).isEqualTo(UserStatus.TEACHER);
+            verify(userRepository).save(any(User.class));
+        }
+    }
+
+    @Test
+    void shouldThrowBadRequestException_WhenUsernameMismatch() {
+        UserProfileValues values = new UserProfileValues("otheruser", "New", "User", "TEACHER");
+
+        assertThatThrownBy(() -> userService.createProfile("username", values))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage("Username mismatch");
+    }
+
+    @Test
+    void shouldThrowBadRequestException_WhenStatusIsInvalid() {
+        UserProfileValues values = new UserProfileValues("newuser", "New", "User", "INVALID_STATUS");
+        CustomPrincipal principal = new CustomPrincipal(user);
+
+        try (MockedStatic<SecurityContextHolder> securityContextHolder = mockStatic(SecurityContextHolder.class)) {
+            SecurityContext securityContext = mock(SecurityContext.class);
+            Authentication authentication = mock(Authentication.class);
+
+            securityContextHolder.when(SecurityContextHolder::getContext).thenReturn(securityContext);
+            when(securityContext.getAuthentication()).thenReturn(authentication);
+            when(authentication.getPrincipal()).thenReturn(principal);
+
+            when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+
+            assertThatThrownBy(() -> userService.createProfile("newuser", values))
+                    .isInstanceOf(BadRequestException.class)
+                    .hasMessageContaining("Invalid status");
         }
     }
 }
