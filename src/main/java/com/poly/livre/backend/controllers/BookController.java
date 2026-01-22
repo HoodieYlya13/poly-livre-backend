@@ -4,10 +4,7 @@ import com.poly.livre.backend.models.dtos.BookDto;
 import com.poly.livre.backend.services.BookService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
@@ -27,5 +24,10 @@ public class BookController {
     @GetMapping("/trending")
     public ResponseEntity<List<BookDto>> getTrendingBooks() {
         return ResponseEntity.ok(bookService.getTrendingBooks());
+    }
+
+    @PostMapping("/add")
+    public ResponseEntity<BookDto> addBook() {
+        return ResponseEntity.ok(bookService.addBook());
     }
 }
