@@ -79,4 +79,18 @@ class BookServiceTest {
 
         verify(bookRepository).findAll(PageRequest.of(0, 4));
     }
+
+    @Test
+    void shouldReturnAllBooks() {
+        Book book = Book.builder().title("Some Book").build();
+        BookDto bookDto = BookDto.builder().title("Some Book").build();
+
+        when(bookRepository.findAll()).thenReturn(List.of(book));
+        when(bookConverter.convert(book)).thenReturn(bookDto);
+
+        List<BookDto> result = bookService.getAllBooks();
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getTitle()).isEqualTo("Some Book");
+    }
 }
