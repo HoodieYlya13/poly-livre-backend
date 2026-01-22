@@ -46,6 +46,10 @@ public class WebSecurityConfiguration implements WebMvcConfigurer {
                                                 .requestMatchers(HttpMethod.POST, "/auth/passkey/**").permitAll()
                                                 .requestMatchers(HttpMethod.POST, "/users/**").authenticated()
 
+                                                .requestMatchers(HttpMethod.GET, "/books/**").permitAll()
+                                                .requestMatchers(HttpMethod.GET, "/images/**").permitAll()
+                                                .requestMatchers(HttpMethod.GET, "/users/testimonials/**").permitAll()
+
                                                 .requestMatchers("/auth/passkeys/**").authenticated()
                                                 .anyRequest().authenticated())
                                 .sessionManagement(session -> session

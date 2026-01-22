@@ -22,6 +22,7 @@ import java.util.UUID;
 public class UserController {
 
     private final UserService userService;
+    private final com.poly.livre.backend.services.TestimonialService testimonialService;
 
     @Operation(summary = "Get a user by its ID")
     @ApiResponses(value = {
@@ -42,6 +43,12 @@ public class UserController {
     @PutMapping(path = "/{username}")
     public ResponseEntity<UserDto> updateUsername(@PathVariable @NonNull String username) {
         return ResponseEntity.ok(userService.updateUsername(username));
+    }
+
+    @GetMapping(path = "/testimonials/{locale}")
+    public ResponseEntity<java.util.List<com.poly.livre.backend.models.dtos.TestimonialDto>> getTestimonials(
+            @PathVariable @NonNull String locale) {
+        return ResponseEntity.ok(testimonialService.getTestimonialsByLocale(locale));
     }
 
 }

@@ -16,6 +16,9 @@ public class UserConverter implements Converter<User, UserDto> {
                 .id(user.getId())
                 .username(user.getUsername())
                 .email(user.getEmail())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .status(user.getStatus())
                 .build();
     }
 

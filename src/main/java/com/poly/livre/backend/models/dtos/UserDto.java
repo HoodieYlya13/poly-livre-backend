@@ -21,4 +21,9 @@ public class UserDto {
 
     private Integer expiresIn;
 
+    private String firstName;
+
+    private String lastName;
+
+    private com.poly.livre.backend.models.enums.UserStatus status;
 }
