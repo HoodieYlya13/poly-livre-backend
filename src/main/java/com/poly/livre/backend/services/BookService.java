@@ -35,6 +35,15 @@ public class BookService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
+    public List<BookDto> getAllBooks() {
+        return bookRepository.findAll()
+                .stream()
+                .map(bookConverter::convert)
+                .toList();
+    }
+}
+
     @Transactional
     public BookDto addBook() {
         BookDto newBook = BookDto.builder()
@@ -43,7 +52,6 @@ public class BookService {
                 .author("Author Name")
                 .price(19.99)
                 .build();
-
         return newBook;
     }
 }
