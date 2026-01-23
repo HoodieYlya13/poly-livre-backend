@@ -21,12 +21,13 @@ import java.util.UUID;
 @RestController
 @RequestMapping(path = "/users", produces = "application/json")
 @RequiredArgsConstructor
+@io.swagger.v3.oas.annotations.tags.Tag(name = "Users", description = "Endpoints for user management")
 public class UserController {
 
     private final UserService userService;
     private final com.poly.livre.backend.services.TestimonialService testimonialService;
 
-    @Operation(summary = "Get a user by its ID")
+    @Operation(summary = "Get a user by its ID", description = "Retrieves public information about a specific user.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "User found", content = {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = UserDto.class)) }),
@@ -37,17 +38,28 @@ public class UserController {
         return ResponseEntity.ok(userService.getUserById(userId));
     }
 
+    @Operation(summary = "Get current user", description = "Retrieves the profile of the currently authenticated user.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Current user profile"),
+            @ApiResponse(responseCode = "403", description = "Not authenticated")
+    })
     @GetMapping(path = "/me")
     public ResponseEntity<UserDto> getCurrentUser() {
         return ResponseEntity.ok(userService.getCurrentUserDto());
     }
 
+    @Operation(summary = "Update username", description = "Updates the username for the authenticated user.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Username updated"),
+            @ApiResponse(responseCode = "400", description = "Invalid username format"),
+            @ApiResponse(responseCode = "403", description = "Not authorized to update this user")
+    })
     @PutMapping(path = "/{username}")
     public ResponseEntity<UserDto> updateUsername(@PathVariable @NonNull String username) {
         return ResponseEntity.ok(userService.updateUsername(username));
     }
 
-    @Operation(summary = "Create user profile")
+    @Operation(summary = "Create user profile", description = "Initializes the user profile with personal details.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Profile created", content = {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = UserDto.class)) }),
@@ -61,6 +73,10 @@ public class UserController {
         return ResponseEntity.ok(userService.createProfile(username, values));
     }
 
+    @Operation(summary = "Get testimonials", description = "Retrieves testimonials derived from user reviews, filtered by locale.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "List of testimonials")
+    })
     @GetMapping(path = "/testimonials/{locale}")
     public ResponseEntity<java.util.List<com.poly.livre.backend.models.dtos.TestimonialDto>> getTestimonials(
             @PathVariable @NonNull String locale) {
