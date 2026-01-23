@@ -5,6 +5,12 @@ import com.poly.livre.backend.exceptions.NotFoundException;
 import com.poly.livre.backend.models.converters.BookConverter;
 import com.poly.livre.backend.models.dtos.BookDto;
 import com.poly.livre.backend.repositories.BookRepository;
+import com.poly.livre.backend.exceptions.ForbiddenException;
+import com.poly.livre.backend.exceptions.errors.UserErrorCode;
+import com.poly.livre.backend.models.dtos.BookRequestDto;
+import com.poly.livre.backend.models.entities.Book;
+import com.poly.livre.backend.repositories.ImageRepository;
+import com.poly.livre.backend.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,10 +20,12 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-public class BookService {
+public class BookService implements BaseService {
 
     private final BookRepository bookRepository;
     private final BookConverter bookConverter;
+    private final UserRepository userRepository;
+    private final ImageRepository imageRepository;
 
     @Transactional(readOnly = true)
     public BookDto getBookById(UUID id) {
@@ -44,13 +52,35 @@ public class BookService {
     }
 
     @Transactional
-    public BookDto addBook() {
-        BookDto newBook = BookDto.builder()
-                .title("New Book")
-                .description("Description of the new book")
-                .author("Author Name")
-                .price(19.99)
+    public BookDto addBook(BookRequestDto request) {
+        var currentUser = getCurrentUser()
+                .orElseThrow(() -> new ForbiddenException(UserErrorCode.NOT_FOUND));
+
+        if (!currentUser.getId().equals(request.ownerId())) {
+            throw new ForbiddenException(UserErrorCode.ACCESS_DENIED);
+        }
+
+        var owner = userRepository.findById(request.ownerId())
+                .orElseThrow(() -> new NotFoundException(UserErrorCode.NOT_FOUND, request.ownerId().toString()));
+
+        // Mock image for the moment
+        var coverImage = imageRepository.findAll().stream().findFirst().orElse(null);
+
+        var book = Book.builder()
+                .title(request.title())
+                .author(request.author())
+                .description(request.description())
+                .price(request.price())
+                .loanDuration(request.loanDuration())
+                .styles(request.styles())
+                .pages(request.information().pages())
+                .year(request.information().year())
+                .language(request.information().language())
+                .delivery(request.information().delivery())
+                .owner(owner)
+                .coverImage(coverImage)
                 .build();
-        return newBook;
+
+        return bookConverter.convert(bookRepository.save(book));
     }
 }

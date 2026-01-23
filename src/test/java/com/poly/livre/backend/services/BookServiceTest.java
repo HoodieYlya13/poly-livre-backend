@@ -20,6 +20,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import com.poly.livre.backend.repositories.ImageRepository;
+import com.poly.livre.backend.repositories.UserRepository;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -34,6 +37,12 @@ class BookServiceTest {
 
     @Mock
     private BookConverter bookConverter;
+
+    @Mock
+    private UserRepository userRepository;
+
+    @Mock
+    private ImageRepository imageRepository;
 
     @InjectMocks
     private BookService bookService;

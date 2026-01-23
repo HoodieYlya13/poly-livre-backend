@@ -10,6 +10,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.poly.livre.backend.models.dtos.BookRequestDto;
+import com.poly.livre.backend.models.enums.DeliveryType;
+import com.poly.livre.backend.models.enums.LocaleLanguage;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.List;
@@ -17,8 +21,11 @@ import java.util.UUID;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -84,5 +91,28 @@ class BookControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
                 .andExpect(jsonPath("$[0].title", is("Book 1")));
+    }
+
+    @Test
+    void shouldAddBook() throws Exception {
+        UUID ownerId = UUID.randomUUID();
+        BookRequestDto.InformationDto infoDto = new BookRequestDto.InformationDto(12, 2020, LocaleLanguage.FR,
+                DeliveryType.FREE);
+        BookRequestDto requestDto = new BookRequestDto("New Book", "Author Name", "Description", 19.99, 30,
+                List.of("Science-Fiction"), infoDto, ownerId);
+
+        BookDto bookDto = BookDto.builder()
+                .title("New Book")
+                .author("Author Name")
+                .price(19.99)
+                .build();
+
+        given(bookService.addBook(any(BookRequestDto.class))).willReturn(bookDto);
+
+        mockMvc.perform(post("/books/add")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(new ObjectMapper().writeValueAsString(requestDto)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.title", is("New Book")));
     }
 }

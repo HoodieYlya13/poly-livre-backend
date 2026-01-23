@@ -1,12 +1,15 @@
 package com.poly.livre.backend.controllers;
 
 import com.poly.livre.backend.models.dtos.BookDto;
+import com.poly.livre.backend.models.dtos.BookRequestDto;
 import com.poly.livre.backend.services.BookService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -36,7 +39,7 @@ public class BookController {
     }
 
     @PostMapping("/add")
-    public ResponseEntity<BookDto> addBook() {
-        return ResponseEntity.ok(bookService.addBook());
+    public ResponseEntity<BookDto> addBook(@RequestBody @Valid BookRequestDto request) {
+        return ResponseEntity.ok(bookService.addBook(request));
     }
 }
