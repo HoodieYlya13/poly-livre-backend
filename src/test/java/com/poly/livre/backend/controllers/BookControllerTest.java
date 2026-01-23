@@ -130,4 +130,30 @@ class BookControllerTest {
                                 .andExpect(jsonPath("$", hasSize(1)))
                                 .andExpect(jsonPath("$[0].title", is("User Book")));
         }
+
+        @Test
+        void shouldDeleteBook() throws Exception {
+                UUID bookId = UUID.randomUUID();
+
+                mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                                .delete("/books/{id}", bookId))
+                                .andExpect(status().isNoContent());
+        }
+
+        @Test
+        void shouldToggleFavorite() throws Exception {
+                UUID bookId = UUID.randomUUID();
+                UUID userId = UUID.randomUUID();
+                BookDto bookDto = BookDto.builder().id(bookId).title("Favorite Book").build();
+                com.poly.livre.backend.models.dtos.ToggleFavoriteRequestDto request = new com.poly.livre.backend.models.dtos.ToggleFavoriteRequestDto(
+                                userId);
+
+                given(bookService.toggleFavorite(bookId)).willReturn(bookDto);
+
+                mockMvc.perform(post("/books/{id}/favorite", bookId)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(new ObjectMapper().writeValueAsString(request)))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.title", is("Favorite Book")));
+        }
 }

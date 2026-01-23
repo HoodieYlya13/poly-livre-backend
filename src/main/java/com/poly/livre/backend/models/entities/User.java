@@ -47,4 +47,10 @@ public class User extends AuditDateEntity {
     @Column(name = "STATUS", columnDefinition = "VARCHAR(50)")
     private com.poly.livre.backend.models.enums.UserStatus status;
 
+    @EqualsAndHashCode.Exclude
+    @ToString.Exclude
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "USER_FAVORITE_BOOKS", joinColumns = @JoinColumn(name = "USER_ID"), inverseJoinColumns = @JoinColumn(name = "BOOK_ID"))
+    @Builder.Default
+    private java.util.Set<Book> favoriteBooks = new java.util.HashSet<>();
 }

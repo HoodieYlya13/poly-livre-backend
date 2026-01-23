@@ -30,6 +30,8 @@ public class Book extends AuditDateEntity {
     @Column(name = "AUTHOR", columnDefinition = "VARCHAR(255)")
     private String author;
 
+    @EqualsAndHashCode.Exclude
+    @ToString.Exclude
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "COVER_IMAGE_ID")
     private Image coverImage;
@@ -48,6 +50,8 @@ public class Book extends AuditDateEntity {
     @Column(name = "PRICE")
     private Double price;
 
+    @EqualsAndHashCode.Exclude
+    @ToString.Exclude
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "OWNER_ID")
     private User owner;

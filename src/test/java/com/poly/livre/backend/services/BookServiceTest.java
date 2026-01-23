@@ -54,7 +54,7 @@ class BookServiceTest {
         BookDto bookDto = BookDto.builder().id(bookId).title("Test Book").build();
 
         when(bookRepository.findById(bookId)).thenReturn(Optional.of(book));
-        when(bookConverter.convert(book)).thenReturn(bookDto);
+        when(bookConverter.convert(any(Book.class), any())).thenReturn(bookDto);
 
         BookDto result = bookService.getBookById(bookId);
 
@@ -79,7 +79,7 @@ class BookServiceTest {
         Page<Book> page = new PageImpl<>(List.of(book));
 
         when(bookRepository.findAll(any(Pageable.class))).thenReturn(page);
-        when(bookConverter.convert(book)).thenReturn(bookDto);
+        when(bookConverter.convert(any(Book.class), any())).thenReturn(bookDto);
 
         List<BookDto> result = bookService.getTrendingBooks();
 
@@ -95,7 +95,7 @@ class BookServiceTest {
         BookDto bookDto = BookDto.builder().title("Some Book").build();
 
         when(bookRepository.findAll()).thenReturn(List.of(book));
-        when(bookConverter.convert(book)).thenReturn(bookDto);
+        when(bookConverter.convert(any(Book.class), any())).thenReturn(bookDto);
 
         List<BookDto> result = bookService.getAllBooks();
 
@@ -110,7 +110,7 @@ class BookServiceTest {
         BookDto bookDto = BookDto.builder().title("User Book").build();
 
         when(bookRepository.findAllByOwnerId(userId)).thenReturn(List.of(book));
-        when(bookConverter.convert(book)).thenReturn(bookDto);
+        when(bookConverter.convert(any(Book.class), any())).thenReturn(bookDto);
 
         List<BookDto> result = bookService.getBooksByUserId(userId);
 

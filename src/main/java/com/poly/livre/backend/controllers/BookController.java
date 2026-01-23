@@ -47,4 +47,15 @@ public class BookController {
     public ResponseEntity<List<BookDto>> getBooksByUserId(@PathVariable UUID id) {
         return ResponseEntity.ok(bookService.getBooksByUserId(id));
     }
+
+    @org.springframework.web.bind.annotation.DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteBook(@PathVariable UUID id) {
+        bookService.deleteBook(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{id}/favorite")
+    public ResponseEntity<BookDto> toggleFavorite(@PathVariable UUID id) {
+        return ResponseEntity.ok(bookService.toggleFavorite(id));
+    }
 }
