@@ -10,4 +10,6 @@ import java.util.UUID;
 @Repository
 public interface BookRepository extends JpaRepository<Book, UUID> {
     List<Book> findAllByOwnerId(UUID ownerId);
+
+    List<Book> findAllByStylesContaining(String style);
 }

@@ -61,6 +61,13 @@ public class BookController {
         return ResponseEntity.ok(bookService.getBooksByUserId(id));
     }
 
+    @io.swagger.v3.oas.annotations.Operation(summary = "Get books by style", description = "Retrieves all books that have the specified style.")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "List of books with the style")
+    @GetMapping("/style/{style}")
+    public ResponseEntity<List<BookDto>> getBooksByStyle(@PathVariable String style) {
+        return ResponseEntity.ok(bookService.getBooksByStyle(style));
+    }
+
     @io.swagger.v3.oas.annotations.Operation(summary = "Delete a book", description = "Deletes a book by its ID.")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "204", description = "Book deleted successfully")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden if user is not the owner")

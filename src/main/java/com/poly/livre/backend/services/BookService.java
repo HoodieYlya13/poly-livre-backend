@@ -98,6 +98,15 @@ public class BookService implements BaseService {
                                 .toList();
         }
 
+        @Transactional(readOnly = true)
+        public List<BookDto> getBooksByStyle(String style) {
+                var favoriteBookIds = getFavoriteBookIds();
+                return bookRepository.findAllByStylesContaining(style)
+                                .stream()
+                                .map(book -> bookConverter.convert(book, favoriteBookIds))
+                                .toList();
+        }
+
         @Transactional
         public void deleteBook(UUID bookId) {
                 var currentUser = getCurrentUser()
