@@ -32,87 +32,102 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ExtendWith(MockitoExtension.class)
 class BookControllerTest {
 
-    private MockMvc mockMvc;
+        private MockMvc mockMvc;
 
-    @Mock
-    private BookService bookService;
+        @Mock
+        private BookService bookService;
 
-    @InjectMocks
-    private BookController bookController;
+        @InjectMocks
+        private BookController bookController;
 
-    @BeforeEach
-    void setUp() {
-        mockMvc = MockMvcBuilders.standaloneSetup(bookController).build();
-    }
+        @BeforeEach
+        void setUp() {
+                mockMvc = MockMvcBuilders.standaloneSetup(bookController).build();
+        }
 
-    @Test
-    void shouldReturnBookById() throws Exception {
-        UUID bookId = UUID.randomUUID();
-        BookDto bookDto = BookDto.builder()
-                .id(bookId)
-                .title("Integration Test Book")
-                .author("Tester")
-                .build();
+        @Test
+        void shouldReturnBookById() throws Exception {
+                UUID bookId = UUID.randomUUID();
+                BookDto bookDto = BookDto.builder()
+                                .id(bookId)
+                                .title("Integration Test Book")
+                                .author("Tester")
+                                .build();
 
-        given(bookService.getBookById(bookId)).willReturn(bookDto);
+                given(bookService.getBookById(bookId)).willReturn(bookDto);
 
-        mockMvc.perform(get("/books/{id}", bookId)
-                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id", is(bookId.toString())))
-                .andExpect(jsonPath("$.title", is("Integration Test Book")))
-                .andExpect(jsonPath("$.author", is("Tester")));
-    }
+                mockMvc.perform(get("/books/{id}", bookId)
+                                .contentType(MediaType.APPLICATION_JSON))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.id", is(bookId.toString())))
+                                .andExpect(jsonPath("$.title", is("Integration Test Book")))
+                                .andExpect(jsonPath("$.author", is("Tester")));
+        }
 
-    @Test
-    void shouldReturnTrendingBooks() throws Exception {
-        BookDto book1 = BookDto.builder().title("Trending 1").build();
-        BookDto book2 = BookDto.builder().title("Trending 2").build();
-        List<BookDto> trendingBooks = List.of(book1, book2);
+        @Test
+        void shouldReturnTrendingBooks() throws Exception {
+                BookDto book1 = BookDto.builder().title("Trending 1").build();
+                BookDto book2 = BookDto.builder().title("Trending 2").build();
+                List<BookDto> trendingBooks = List.of(book1, book2);
 
-        given(bookService.getTrendingBooks()).willReturn(trendingBooks);
+                given(bookService.getTrendingBooks()).willReturn(trendingBooks);
 
-        mockMvc.perform(get("/books/trending")
-                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(2)))
-                .andExpect(jsonPath("$[0].title", is("Trending 1")));
-    }
+                mockMvc.perform(get("/books/trending")
+                                .contentType(MediaType.APPLICATION_JSON))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$", hasSize(2)))
+                                .andExpect(jsonPath("$[0].title", is("Trending 1")));
+        }
 
-    @Test
-    void shouldReturnAllBooks() throws Exception {
-        BookDto book1 = BookDto.builder().title("Book 1").build();
-        List<BookDto> allBooks = List.of(book1);
+        @Test
+        void shouldReturnAllBooks() throws Exception {
+                BookDto book1 = BookDto.builder().title("Book 1").build();
+                List<BookDto> allBooks = List.of(book1);
 
-        given(bookService.getAllBooks()).willReturn(allBooks);
+                given(bookService.getAllBooks()).willReturn(allBooks);
 
-        mockMvc.perform(get("/books/all")
-                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].title", is("Book 1")));
-    }
+                mockMvc.perform(get("/books/all")
+                                .contentType(MediaType.APPLICATION_JSON))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$", hasSize(1)))
+                                .andExpect(jsonPath("$[0].title", is("Book 1")));
+        }
 
-    @Test
-    void shouldAddBook() throws Exception {
-        UUID ownerId = UUID.randomUUID();
-        BookRequestDto.InformationDto infoDto = new BookRequestDto.InformationDto(12, 2020, LocaleLanguage.FR,
-                DeliveryType.FREE);
-        BookRequestDto requestDto = new BookRequestDto("New Book", "Author Name", "Description", 19.99, 30,
-                List.of("Science-Fiction"), infoDto, ownerId);
+        @Test
+        void shouldAddBook() throws Exception {
+                UUID ownerId = UUID.randomUUID();
+                BookRequestDto.InformationDto infoDto = new BookRequestDto.InformationDto(12, 2020, LocaleLanguage.FR,
+                                DeliveryType.FREE);
+                BookRequestDto requestDto = new BookRequestDto("New Book", "Author Name", "Description", 19.99, 30,
+                                List.of("Science-Fiction"), infoDto, ownerId);
 
-        BookDto bookDto = BookDto.builder()
-                .title("New Book")
-                .author("Author Name")
-                .price(19.99)
-                .build();
+                BookDto bookDto = BookDto.builder()
+                                .title("New Book")
+                                .author("Author Name")
+                                .price(19.99)
+                                .build();
 
-        given(bookService.addBook(any(BookRequestDto.class))).willReturn(bookDto);
+                given(bookService.addBook(any(BookRequestDto.class))).willReturn(bookDto);
 
-        mockMvc.perform(post("/books/add")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(new ObjectMapper().writeValueAsString(requestDto)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.title", is("New Book")));
-    }
+                mockMvc.perform(post("/books/add")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(new ObjectMapper().writeValueAsString(requestDto)))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.title", is("New Book")));
+        }
+
+        @Test
+        void shouldReturnBooksByUserId() throws Exception {
+                UUID userId = UUID.randomUUID();
+                BookDto book = BookDto.builder().title("User Book").build();
+                List<BookDto> userBooks = List.of(book);
+
+                given(bookService.getBooksByUserId(userId)).willReturn(userBooks);
+
+                mockMvc.perform(get("/books/user/{id}", userId)
+                                .contentType(MediaType.APPLICATION_JSON))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$", hasSize(1)))
+                                .andExpect(jsonPath("$[0].title", is("User Book")));
+        }
 }

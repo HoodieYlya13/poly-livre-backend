@@ -42,4 +42,9 @@ public class BookController {
     public ResponseEntity<BookDto> addBook(@RequestBody @Valid BookRequestDto request) {
         return ResponseEntity.ok(bookService.addBook(request));
     }
+
+    @GetMapping("/user/{id}")
+    public ResponseEntity<List<BookDto>> getBooksByUserId(@PathVariable UUID id) {
+        return ResponseEntity.ok(bookService.getBooksByUserId(id));
+    }
 }

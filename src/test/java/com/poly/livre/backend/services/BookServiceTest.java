@@ -102,4 +102,19 @@ class BookServiceTest {
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getTitle()).isEqualTo("Some Book");
     }
+
+    @Test
+    void shouldReturnBooksByUserId() {
+        UUID userId = UUID.randomUUID();
+        Book book = Book.builder().title("User Book").build();
+        BookDto bookDto = BookDto.builder().title("User Book").build();
+
+        when(bookRepository.findAllByOwnerId(userId)).thenReturn(List.of(book));
+        when(bookConverter.convert(book)).thenReturn(bookDto);
+
+        List<BookDto> result = bookService.getBooksByUserId(userId);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getTitle()).isEqualTo("User Book");
+    }
 }
